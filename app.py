@@ -61,13 +61,15 @@ def generate():
     try:
         # 1. Get and validate input
         prompt = request.form.get('prompt', '').strip()
-        call_duration = int(request.form.get('call_duration', '60'))
+        call_duration_str = request.form.get('call_duration', '60').strip()
+        call_duration = int(call_duration_str) if call_duration_str else 60
+        emotion_level = request.form.get('emotion_level', 'concerned').strip()
         audio_format = request.form.get('audio_format', 'mp3').lower()
         diarized = request.form.get('diarized', 'false').lower() == 'true'
         dispatcher_voice_id = request.form.get('dispatcher_voice_id', '').strip()
         caller_voice_id = request.form.get('caller_voice_id', '').strip()
 
-        logger.info(f"Generate request: format={audio_format}, diarized={diarized}, duration={call_duration}s")
+        logger.info(f"Generate request: format={audio_format}, diarized={diarized}, duration={call_duration}s, emotion={emotion_level}")
         logger.info(f"Voices: dispatcher={dispatcher_voice_id[:20]}..., caller={caller_voice_id[:20]}...")
         logger.info(f"Prompt: {prompt[:100]}...")
 
@@ -94,9 +96,22 @@ def generate():
                 {"error": "Both dispatcher and caller voices must be selected"}
             ), 400
 
+        # Get voice information including gender
+        dispatcher_info = elevenlabs.get_voice_info(dispatcher_voice_id)
+        caller_info = elevenlabs.get_voice_info(caller_voice_id)
+
+        logger.info(f"Dispatcher voice: {dispatcher_info['name']} ({dispatcher_info['gender']})")
+        logger.info(f"Caller voice: {caller_info['name']} ({caller_info['gender']})")
+
         # 2. Generate dialogue with Gemini
         logger.info("Step 1: Generating dialogue...")
-        dialogue_data = gemini.generate_dialogue(prompt, call_duration)
+        dialogue_data = gemini.generate_dialogue(
+            prompt,
+            call_duration,
+            emotion_level,
+            dispatcher_info['gender'],
+            caller_info['gender']
+        )
         dialogue = dialogue_data['dialogue']
         metadata = dialogue_data.get('metadata', {})
 
@@ -116,7 +131,8 @@ def generate():
             else:  # caller
                 audio_bytes = elevenlabs.generate_caller_audio(
                     item['text'],
-                    caller_voice_id
+                    caller_voice_id,
+                    emotion_level
                 )
 
             audio_segments.append(audio_bytes)

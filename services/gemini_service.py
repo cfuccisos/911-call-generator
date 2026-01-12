@@ -19,13 +19,23 @@ class GeminiService:
         self.model = genai.GenerativeModel('gemini-2.5-flash')
         self.logger = logging.getLogger(__name__)
 
-    def generate_dialogue(self, scenario: str, target_duration: int = 60) -> dict:
+    def generate_dialogue(
+        self,
+        scenario: str,
+        target_duration: int = 60,
+        emotion_level: str = 'concerned',
+        dispatcher_gender: str = 'unknown',
+        caller_gender: str = 'unknown'
+    ) -> dict:
         """
         Generate 911 call dialogue based on scenario.
 
         Args:
             scenario: Description of the emergency scenario
             target_duration: Target call duration in seconds (default: 60)
+            emotion_level: Caller emotion level (calm, concerned, anxious, panicked, hysterical)
+            dispatcher_gender: Gender of dispatcher voice (male, female, unknown)
+            caller_gender: Gender of caller voice (male, female, unknown)
 
         Returns:
             Dictionary with structure:
@@ -44,10 +54,10 @@ class GeminiService:
         Raises:
             ValueError: If dialogue generation or parsing fails
         """
-        prompt = self._build_prompt(scenario, target_duration)
+        prompt = self._build_prompt(scenario, target_duration, emotion_level, dispatcher_gender, caller_gender)
 
         try:
-            self.logger.info(f"Generating dialogue for scenario: {scenario[:50]}... (target: {target_duration}s)")
+            self.logger.info(f"Generating dialogue for scenario: {scenario[:50]}... (target: {target_duration}s, emotion: {emotion_level}, dispatcher: {dispatcher_gender}, caller: {caller_gender})")
             response = self.model.generate_content(prompt)
             dialogue_data = self._parse_response(response.text)
             self.logger.info(f"Generated {len(dialogue_data['dialogue'])} dialogue exchanges")
@@ -56,13 +66,23 @@ class GeminiService:
             self.logger.error(f"Gemini API error: {str(e)}")
             raise ValueError(f"Failed to generate dialogue: {str(e)}")
 
-    def _build_prompt(self, scenario: str, target_duration: int = 60) -> str:
+    def _build_prompt(
+        self,
+        scenario: str,
+        target_duration: int = 60,
+        emotion_level: str = 'concerned',
+        dispatcher_gender: str = 'unknown',
+        caller_gender: str = 'unknown'
+    ) -> str:
         """
         Build prompt for Gemini to generate realistic 911 dialogue.
 
         Args:
             scenario: User's emergency scenario description
             target_duration: Target duration in seconds
+            emotion_level: Caller emotion level
+            dispatcher_gender: Gender of dispatcher
+            caller_gender: Gender of caller
 
         Returns:
             Formatted prompt string
@@ -80,17 +100,39 @@ class GeminiService:
         else:  # 180+ seconds
             exchange_range = "24-30"
 
+        # Map emotion level to description for prompt
+        emotion_descriptions = {
+            'calm': 'calm and composed, speaking clearly with minimal emotion',
+            'concerned': 'worried but coherent, with some stress in their voice',
+            'anxious': 'nervous and stressed, speaking quickly with noticeable worry',
+            'panicked': 'very distressed, speaking urgently with fear and anxiety',
+            'hysterical': 'extremely emotional, potentially crying or screaming, very difficult to calm'
+        }
+        emotion_desc = emotion_descriptions.get(emotion_level, emotion_descriptions['concerned'])
+
+        # Build gender context for the prompt
+        dispatcher_desc = ""
+        if dispatcher_gender in ['male', 'female']:
+            dispatcher_desc = f" The dispatcher is {dispatcher_gender}."
+
+        caller_desc = ""
+        if caller_gender in ['male', 'female']:
+            caller_desc = f" The caller is {caller_gender}."
+
+        gender_context = f"{dispatcher_desc}{caller_desc}" if (dispatcher_desc or caller_desc) else ""
+
         return f"""You are an expert in creating realistic 911 emergency call scenarios for training purposes.
 
 Generate a dialogue between a 911 dispatcher and a caller based on this scenario:
 {scenario}
 
 Requirements:
-1. The dispatcher should be professional, calm, and ask relevant questions
-2. The caller should be realistic with appropriate emotion and urgency
+1. The dispatcher should be professional, calm, and ask relevant questions{dispatcher_desc}
+2. The caller should be {emotion_desc}{caller_desc}
 3. Include {exchange_range} exchanges total (target duration: ~{target_duration} seconds)
 4. Dispatcher asks for: location, nature of emergency, injuries/hazards, etc.
-5. Format as JSON with this EXACT structure:
+5. Use appropriate pronouns and references based on the gender of each speaker
+6. Format as JSON with this EXACT structure:
 
 {{
   "dialogue": [

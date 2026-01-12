@@ -19,6 +19,40 @@ class ElevenLabsService:
         self.api_key = api_key
         self.logger = logging.getLogger(__name__)
 
+    def _preprocess_text(self, text: str) -> str:
+        """
+        Preprocess text to fix pronunciation issues and remove non-speech characters.
+
+        Args:
+            text: Original text
+
+        Returns:
+            Processed text with pronunciation fixes and clean speech
+        """
+        import re
+
+        # Replace "911" with "nine one one" for correct pronunciation
+        # Match "911" as a standalone word or at the beginning of a sentence
+        processed = re.sub(r'\b911\b', 'nine one one', text)
+
+        # Remove asterisks and other markdown formatting characters
+        # Remove *text* (emphasis) and **text** (strong emphasis)
+        processed = re.sub(r'\*+([^*]+)\*+', r'\1', processed)
+
+        # Remove underscores used for emphasis _text_
+        processed = re.sub(r'_+([^_]+)_+', r'\1', processed)
+
+        # Remove tildes used for strikethrough ~~text~~
+        processed = re.sub(r'~+([^~]+)~+', r'\1', processed)
+
+        # Remove any remaining single asterisks, underscores, or tildes
+        processed = re.sub(r'[*_~]', '', processed)
+
+        # Remove extra whitespace that might result from removals
+        processed = re.sub(r'\s+', ' ', processed).strip()
+
+        return processed
+
     def text_to_speech(
         self,
         text: str,
@@ -44,9 +78,12 @@ class ElevenLabsService:
         try:
             self.logger.info(f"Generating speech for: {text[:50]}...")
 
+            # Preprocess text to fix pronunciation issues
+            processed_text = self._preprocess_text(text)
+
             # For version 0.2.27, use simpler API call
             audio = generate(
-                text=text,
+                text=processed_text,
                 voice=voice_id,
                 model="eleven_monolingual_v1"
             )
@@ -76,24 +113,63 @@ class ElevenLabsService:
             clarity=0.75
         )
 
-    def generate_caller_audio(self, text: str, voice_id: str) -> bytes:
+    def generate_caller_audio(self, text: str, voice_id: str, emotion_level: str = 'concerned') -> bytes:
         """
-        Generate audio for caller with more emotional voice settings.
+        Generate audio for caller with emotional voice settings based on emotion level.
 
         Args:
             text: Caller's text
             voice_id: Voice ID for caller
+            emotion_level: Emotion level (calm, concerned, anxious, panicked, hysterical)
 
         Returns:
             Audio bytes
         """
-        # Lower stability for more emotional, varied tone
+        # Map emotion level to stability settings
+        # Lower stability = more emotional variation
+        stability_map = {
+            'calm': 0.65,
+            'concerned': 0.5,
+            'anxious': 0.4,
+            'panicked': 0.3,
+            'hysterical': 0.2
+        }
+        stability = stability_map.get(emotion_level, 0.5)
+
         return self.text_to_speech(
             text=text,
             voice_id=voice_id,
-            stability=0.5,
+            stability=stability,
             clarity=0.75
         )
+
+    def get_voice_info(self, voice_id: str) -> dict:
+        """
+        Get information about a specific voice by ID.
+
+        Args:
+            voice_id: ElevenLabs voice ID
+
+        Returns:
+            Dictionary with voice information including gender
+        """
+        try:
+            all_voices = voices()
+            for voice in all_voices:
+                if voice.voice_id == voice_id:
+                    labels = getattr(voice, 'labels', {})
+                    gender = labels.get('gender', 'unknown') if isinstance(labels, dict) else 'unknown'
+                    return {
+                        'voice_id': voice.voice_id,
+                        'name': voice.name,
+                        'gender': gender,
+                        'labels': labels
+                    }
+            # Voice not found, return unknown
+            return {'voice_id': voice_id, 'name': 'Unknown', 'gender': 'unknown', 'labels': {}}
+        except Exception as e:
+            self.logger.error(f"Error getting voice info: {str(e)}")
+            return {'voice_id': voice_id, 'name': 'Unknown', 'gender': 'unknown', 'labels': {}}
 
     def get_available_voices(self) -> list:
         """

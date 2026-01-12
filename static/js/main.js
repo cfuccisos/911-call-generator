@@ -72,6 +72,7 @@ $(document).ready(function() {
         const formData = {
             prompt: $('#prompt').val().trim(),
             call_duration: $('#callDuration').val(),
+            emotion_level: $('#emotionLevel').val(),
             audio_format: $('#audioFormat').val(),
             diarized: $('#diarized').is(':checked') ? 'true' : 'false',
             dispatcher_voice_id: $('#dispatcherVoice').val(),
@@ -143,6 +144,8 @@ function disableForm() {
         '<span class="spinner-border spinner-border-sm" role="status"></span> Generating...'
     );
     $('#prompt').prop('disabled', true);
+    $('#callDuration').prop('disabled', true);
+    $('#emotionLevel').prop('disabled', true);
     $('#dispatcherVoice').prop('disabled', true);
     $('#callerVoice').prop('disabled', true);
     $('#audioFormat').prop('disabled', true);
@@ -159,6 +162,8 @@ function enableForm() {
         '<i class="bi bi-play-circle"></i> Generate Call'
     );
     $('#prompt').prop('disabled', false);
+    $('#callDuration').prop('disabled', false);
+    $('#emotionLevel').prop('disabled', false);
     $('#dispatcherVoice').prop('disabled', false);
     $('#callerVoice').prop('disabled', false);
     $('#audioFormat').prop('disabled', false);
@@ -207,11 +212,6 @@ function displayResults(response) {
     $('html, body').animate({
         scrollTop: $('#resultsSection').offset().top - 100
     }, 500);
-
-    // Auto-play audio
-    audioPlayer.play().catch(function(error) {
-        console.log('Auto-play prevented:', error);
-    });
 }
 
 /**
