@@ -10,10 +10,14 @@ This tool is designed for testing and training purposes, allowing developers and
 
 - **AI-Generated Dialogue**: Uses Google Gemini to create realistic conversations between a 911 dispatcher and caller
 - **High-Quality Voice Synthesis**: Leverages ElevenLabs TTS for natural-sounding audio
-- **Dual Speaker Support**: Separate voices for dispatcher and caller
+- **Voice Selection**: Choose from 25+ professional voices with real-time preview
+- **Emotion Control**: Adjust caller emotion level from calm to hysterical
+- **Duration Control**: Set target call length from 30 seconds to 3 minutes
+- **Gender-Aware Generation**: Dialogue adapts to match selected voice genders
 - **Multiple Audio Formats**: Export as MP3 or WAV
 - **Diarization Option**: Create stereo audio with speakers on separate channels (dispatcher on left, caller on right)
-- **Web Interface**: User-friendly browser-based interface
+- **Prompt History**: Save and reload previous generation settings
+- **Web Interface**: User-friendly browser-based interface with Bootstrap 5
 - **Auto-Cleanup**: Automatically removes old audio files to save disk space
 
 ## Requirements
@@ -31,11 +35,7 @@ This tool is designed for testing and training purposes, allowing developers and
 2. **ElevenLabs API Key**
    - Sign up at [ElevenLabs](https://elevenlabs.io/)
    - Get your API key from the dashboard
-
-3. **ElevenLabs Voice IDs**
-   - Browse voices at [ElevenLabs Voice Library](https://elevenlabs.io/app/voice-library)
-   - You'll need two voice IDs: one for dispatcher, one for caller
-   - Recommended: Choose a professional, calm voice for dispatcher and a more varied voice for caller
+   - Voices are selected directly in the web interface with preview functionality
 
 ## Installation
 
@@ -104,9 +104,9 @@ pip install -r requirements.txt
    SECRET_KEY=your-secret-key-here
    GEMINI_API_KEY=your-google-gemini-api-key
    ELEVENLABS_API_KEY=your-elevenlabs-api-key
-   DISPATCHER_VOICE_ID=your-dispatcher-voice-id
-   CALLER_VOICE_ID=your-caller-voice-id
    ```
+
+   Note: Voice selection is done in the web interface, not in the `.env` file.
 
 ## Usage
 
@@ -129,18 +129,37 @@ pip install -r requirements.txt
    - Example: "Car accident on Highway 101 with multiple injuries"
    - Keep it under 500 characters
 
-2. **Select Audio Format**:
+2. **Select Voices**:
+   - **Dispatcher Voice**: Choose from professional, calm voices
+   - **Caller Voice**: Choose from varied, emotional voices
+   - Click the **Preview** button to hear a sample of each voice before generating
+
+3. **Set Call Duration**:
+   - Choose target length from 30 seconds to 3 minutes
+   - Longer durations generate more detailed conversations
+
+4. **Choose Emotion Level**:
+   - **Calm**: Composed and clear speech
+   - **Concerned**: Worried but coherent (default)
+   - **Anxious**: Nervous and stressed
+   - **Panicked**: Very distressed and urgent
+   - **Hysterical**: Extremely emotional
+   - This affects both dialogue content and voice characteristics
+
+5. **Select Audio Format**:
    - **MP3**: Compressed format, smaller file size
    - **WAV**: Uncompressed format, higher quality
 
-3. **Enable Diarization** (optional):
+6. **Enable Diarization** (optional):
    - Check this box to create stereo audio with speakers on separate channels
    - Useful for analysis or processing tools that need speaker separation
    - Dispatcher on left channel, caller on right channel
 
-4. **Click "Generate Call"**: The process takes 10-30 seconds depending on dialogue length
+7. **Click "Generate Call"**: The process takes 10-30 seconds depending on dialogue length
 
-5. **Play and Download**: Once generated, you can play the audio in the browser or download it
+8. **Play and Download**: Once generated, you can play the audio in the browser or download it
+
+9. **Use History**: Your recent prompts are saved and can be reloaded with the "Load" button
 
 ### Example Scenarios
 
@@ -191,8 +210,12 @@ Generate 911 call audio from prompt.
 
 **Parameters**:
 - `prompt` (string): Emergency scenario description
+- `call_duration` (integer): Target duration in seconds (30-180)
+- `emotion_level` (string): Caller emotion level ('calm', 'concerned', 'anxious', 'panicked', 'hysterical')
 - `audio_format` (string): 'mp3' or 'wav'
 - `diarized` (string): 'true' or 'false'
+- `dispatcher_voice_id` (string): ElevenLabs voice ID for dispatcher
+- `caller_voice_id` (string): ElevenLabs voice ID for caller
 
 **Response**:
 ```json
@@ -211,6 +234,39 @@ Generate 911 call audio from prompt.
 }
 ```
 
+### GET `/api/voices`
+Get list of available ElevenLabs voices.
+
+**Response**:
+```json
+{
+  "success": true,
+  "voices": [
+    {
+      "voice_id": "21m00Tcm4TlvDq8ikWAM",
+      "name": "Rachel",
+      "category": "premade",
+      "description": "Professional female voice",
+      "labels": {"gender": "female"},
+      "preview_url": "https://..."
+    }
+  ]
+}
+```
+
+### POST `/api/preview-voice`
+Generate a preview audio sample for a voice.
+
+**Parameters**:
+```json
+{
+  "voice_id": "21m00Tcm4TlvDq8ikWAM",
+  "sample_text": "Optional custom preview text"
+}
+```
+
+**Response**: Audio file (audio/mpeg)
+
 ### GET `/download/<filename>`
 Download generated audio file.
 
@@ -223,9 +279,7 @@ Health check endpoint.
   "status": "healthy",
   "service": "911 Call Generator",
   "gemini_configured": true,
-  "elevenlabs_configured": true,
-  "dispatcher_voice_configured": true,
-  "caller_voice_configured": true
+  "elevenlabs_configured": true
 }
 ```
 
@@ -238,12 +292,12 @@ The application can be configured via environment variables in the `.env` file:
 | `SECRET_KEY` | Flask secret key | Yes |
 | `GEMINI_API_KEY` | Google Gemini API key | Yes |
 | `ELEVENLABS_API_KEY` | ElevenLabs API key | Yes |
-| `DISPATCHER_VOICE_ID` | ElevenLabs voice ID for dispatcher | Yes |
-| `CALLER_VOICE_ID` | ElevenLabs voice ID for caller | Yes |
 
 Additional settings can be modified in `config.py`:
 - `MAX_PROMPT_LENGTH`: Maximum prompt length (default: 500)
 - `AUDIO_FILE_LIFETIME`: How long to keep generated files in seconds (default: 3600)
+
+Note: Voice IDs are selected through the web interface and are not stored in configuration.
 
 ## Troubleshooting
 
@@ -294,9 +348,11 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ## Limitations
 
 - Maximum prompt length: 500 characters
-- Generated calls are typically 20-60 seconds long
+- Call duration range: 30 seconds to 3 minutes
 - Requires active API keys with sufficient quota
 - Audio generation time: 10-30 seconds per call
+- Voice preview and selection requires internet connectivity
+- History stored in browser localStorage (limited to 10 recent prompts)
 
 ## License
 
@@ -309,10 +365,35 @@ For issues or questions:
 2. Review the application logs in the console
 3. Verify your API keys and configurations
 
+## Recent Updates
+
+### Voice & Audio Improvements
+- Dynamic voice selection with 25+ voices
+- Real-time voice preview before generation
+- Gender-aware dialogue generation
+- Fixed "911" pronunciation (now "nine one one" instead of "nine eleven")
+- Cleaned markdown formatting from TTS output
+
+### User Experience
+- Call duration selector (30s to 3 minutes)
+- Caller emotion control (5 levels: calm to hysterical)
+- Prompt history with save/load functionality (last 10 prompts)
+- Disabled audio autoplay (user-initiated playback)
+- Fixed form state persistence issues
+
+### Technical Enhancements
+- Voice stability adjustment based on emotion level
+- Gender detection from ElevenLabs API
+- Context-aware prompt engineering for LLM
+- LocalStorage-based history management
+- Enhanced text preprocessing for cleaner speech
+- XSS protection for user input
+
 ## Credits
 
 - **Flask**: Web framework
-- **Google Gemini**: Dialogue generation
-- **ElevenLabs**: Text-to-speech
-- **pydub**: Audio processing
-- **Bootstrap**: Frontend UI framework
+- **Google Gemini**: AI dialogue generation (gemini-2.5-flash model)
+- **ElevenLabs**: High-quality text-to-speech
+- **pydub**: Audio processing and manipulation
+- **Bootstrap 5**: Responsive frontend UI framework
+- **jQuery**: DOM manipulation and AJAX

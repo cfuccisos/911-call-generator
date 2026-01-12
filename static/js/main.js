@@ -12,6 +12,26 @@ $(document).ready(function() {
     // Load available voices on page load
     loadVoices();
 
+    // Load history on page load
+    loadHistory();
+
+    // Clear history button
+    $('#clearHistory').on('click', function() {
+        if (confirm('Are you sure you want to clear all prompt history?')) {
+            localStorage.removeItem('promptHistory');
+            loadHistory();
+        }
+    });
+
+    // Protocol questions collapse toggle
+    $('#protocolQuestionsSection').on('show.bs.collapse', function() {
+        $('#toggleProtocolBtn').html('<i class="bi bi-dash-circle"></i> Hide Protocol Questions');
+    });
+
+    $('#protocolQuestionsSection').on('hide.bs.collapse', function() {
+        $('#toggleProtocolBtn').html('<i class="bi bi-plus-circle"></i> Add Protocol Questions (Optional)');
+    });
+
     // Preview button handlers
     $('#previewDispatcher').on('click', function() {
         const voiceId = $('#dispatcherVoice').val();
@@ -71,6 +91,7 @@ $(document).ready(function() {
         // Get form data
         const formData = {
             prompt: $('#prompt').val().trim(),
+            protocol_questions: $('#protocolQuestions').val().trim(),
             call_duration: $('#callDuration').val(),
             emotion_level: $('#emotionLevel').val(),
             audio_format: $('#audioFormat').val(),
@@ -98,6 +119,9 @@ $(document).ready(function() {
                 hideLoading();
                 enableForm();
                 displayResults(response);
+
+                // Save to history
+                saveToHistory(formData);
             },
             error: function(xhr) {
                 console.error('Error:', xhr);
@@ -144,6 +168,7 @@ function disableForm() {
         '<span class="spinner-border spinner-border-sm" role="status"></span> Generating...'
     );
     $('#prompt').prop('disabled', true);
+    $('#protocolQuestions').prop('disabled', true);
     $('#callDuration').prop('disabled', true);
     $('#emotionLevel').prop('disabled', true);
     $('#dispatcherVoice').prop('disabled', true);
@@ -162,6 +187,7 @@ function enableForm() {
         '<i class="bi bi-play-circle"></i> Generate Call'
     );
     $('#prompt').prop('disabled', false);
+    $('#protocolQuestions').prop('disabled', false);
     $('#callDuration').prop('disabled', false);
     $('#emotionLevel').prop('disabled', false);
     $('#dispatcherVoice').prop('disabled', false);
@@ -196,7 +222,7 @@ function displayResults(response) {
     audioPlayer.src = response.audio_url;
 
     // Set call details
-    $('#callDuration').text(formatDuration(response.duration));
+    $('#callDurationDisplay').text(formatDuration(response.duration));
     $('#callExchanges').text(response.exchanges + ' exchanges');
     $('#callFormat').text(response.format.toUpperCase() + (response.diarized ? ' (Diarized)' : ''));
 
@@ -361,4 +387,150 @@ function previewVoice(voiceId, sampleText) {
             $('#previewDispatcher, #previewCaller').prop('disabled', false);
         }
     });
+}
+
+/**
+ * Save generation settings to history
+ */
+function saveToHistory(formData) {
+    try {
+        // Get existing history from localStorage
+        let history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+
+        // Create history entry
+        const entry = {
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            prompt: formData.prompt,
+            protocol_questions: formData.protocol_questions || '',
+            call_duration: formData.call_duration,
+            emotion_level: formData.emotion_level,
+            audio_format: formData.audio_format,
+            diarized: formData.diarized === 'true'
+        };
+
+        // Add to beginning of array
+        history.unshift(entry);
+
+        // Keep only last 10 entries
+        history = history.slice(0, 10);
+
+        // Save back to localStorage
+        localStorage.setItem('promptHistory', JSON.stringify(history));
+
+        // Reload history display
+        loadHistory();
+    } catch (e) {
+        console.error('Error saving to history:', e);
+    }
+}
+
+/**
+ * Load and display history
+ */
+function loadHistory() {
+    try {
+        const history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+
+        if (history.length === 0) {
+            $('#historySection').addClass('d-none');
+            return;
+        }
+
+        $('#historySection').removeClass('d-none');
+
+        const historyList = $('#historyList');
+        historyList.empty();
+
+        history.forEach(function(entry) {
+            const date = new Date(entry.timestamp);
+            const timeStr = date.toLocaleString();
+            const emotionLabel = entry.emotion_level.charAt(0).toUpperCase() + entry.emotion_level.slice(1);
+
+            const historyItem = $(`
+                <div class="card mb-2 history-item" data-id="${entry.id}" style="cursor: pointer;">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="text-muted small">${timeStr}</div>
+                                <div class="mt-1">${escapeHtml(entry.prompt)}</div>
+                                <div class="mt-2">
+                                    <span class="badge bg-secondary">${entry.call_duration}s</span>
+                                    <span class="badge bg-info">${emotionLabel}</span>
+                                    ${entry.protocol_questions ? '<span class="badge bg-warning text-dark">Protocol</span>' : ''}
+                                    ${entry.diarized ? '<span class="badge bg-success">Diarized</span>' : ''}
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary load-history-btn ms-2" data-id="${entry.id}">
+                                <i class="bi bi-arrow-clockwise"></i> Load
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            historyList.append(historyItem);
+        });
+
+        // Add click handlers for load buttons
+        $('.load-history-btn').on('click', function(e) {
+            e.stopPropagation();
+            const id = $(this).data('id');
+            loadHistoryItem(id);
+        });
+    } catch (e) {
+        console.error('Error loading history:', e);
+    }
+}
+
+/**
+ * Load a history item into the form
+ */
+function loadHistoryItem(id) {
+    try {
+        const history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+        const entry = history.find(item => item.id === id);
+
+        if (entry) {
+            // Fill form with history data
+            $('#prompt').val(entry.prompt);
+            $('#protocolQuestions').val(entry.protocol_questions || '');
+            $('#callDuration').val(entry.call_duration);
+            $('#emotionLevel').val(entry.emotion_level);
+            $('#audioFormat').val(entry.audio_format);
+            $('#diarized').prop('checked', entry.diarized);
+
+            // Update character count
+            $('#charCount').text(entry.prompt.length);
+
+            // If there are protocol questions, expand the section
+            if (entry.protocol_questions) {
+                const protocolSection = $('#protocolQuestionsSection');
+                if (!protocolSection.hasClass('show')) {
+                    protocolSection.collapse('show');
+                }
+            }
+
+            // Scroll to form
+            $('html, body').animate({
+                scrollTop: $('#generateForm').offset().top - 100
+            }, 500);
+        }
+    } catch (e) {
+        console.error('Error loading history item:', e);
+    }
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }

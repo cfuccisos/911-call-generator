@@ -61,6 +61,7 @@ def generate():
     try:
         # 1. Get and validate input
         prompt = request.form.get('prompt', '').strip()
+        protocol_questions = request.form.get('protocol_questions', '').strip()
         call_duration_str = request.form.get('call_duration', '60').strip()
         call_duration = int(call_duration_str) if call_duration_str else 60
         emotion_level = request.form.get('emotion_level', 'concerned').strip()
@@ -72,6 +73,8 @@ def generate():
         logger.info(f"Generate request: format={audio_format}, diarized={diarized}, duration={call_duration}s, emotion={emotion_level}")
         logger.info(f"Voices: dispatcher={dispatcher_voice_id[:20]}..., caller={caller_voice_id[:20]}...")
         logger.info(f"Prompt: {prompt[:100]}...")
+        if protocol_questions:
+            logger.info(f"Protocol questions: {protocol_questions[:100]}...")
 
         # Validate prompt
         is_valid, error_msg = validate_prompt(
@@ -110,7 +113,8 @@ def generate():
             call_duration,
             emotion_level,
             dispatcher_info['gender'],
-            caller_info['gender']
+            caller_info['gender'],
+            protocol_questions
         )
         dialogue = dialogue_data['dialogue']
         metadata = dialogue_data.get('metadata', {})
