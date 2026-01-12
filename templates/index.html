@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h1 class="display-5">
+                <i class="bi bi-broadcast text-danger"></i>
+                911 Call Generator
+            </h1>
+            <p class="lead text-muted">
+                Generate realistic 911 emergency call audio for testing purposes
+            </p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <!-- Form -->
+                <form id="generateForm">
+                    <!-- Prompt Input -->
+                    <div class="mb-4">
+                        <label for="prompt" class="form-label fw-bold">
+                            <i class="bi bi-pencil-square"></i>
+                            Emergency Scenario Description
+                        </label>
+                        <textarea
+                            class="form-control"
+                            id="prompt"
+                            name="prompt"
+                            rows="4"
+                            maxlength="500"
+                            placeholder="Describe the emergency scenario... (e.g., 'Car accident on Highway 101 with multiple injuries')"
+                            required
+                        ></textarea>
+                        <div class="form-text">
+                            <span id="charCount">0</span>/500 characters
+                        </div>
+                    </div>
+
+                    <!-- Dispatcher Voice Selection -->
+                    <div class="mb-3">
+                        <label for="dispatcherVoice" class="form-label fw-bold">
+                            <i class="bi bi-person-badge"></i>
+                            Dispatcher Voice
+                        </label>
+                        <div class="input-group">
+                            <select class="form-select" id="dispatcherVoice" name="dispatcher_voice_id" required>
+                                <option value="">Loading voices...</option>
+                            </select>
+                            <button class="btn btn-outline-secondary" type="button" id="previewDispatcher" disabled>
+                                <i class="bi bi-volume-up"></i> Preview
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Professional, calm voice for the 911 dispatcher
+                        </div>
+                    </div>
+
+                    <!-- Caller Voice Selection -->
+                    <div class="mb-3">
+                        <label for="callerVoice" class="form-label fw-bold">
+                            <i class="bi bi-person-fill"></i>
+                            Caller Voice
+                        </label>
+                        <div class="input-group">
+                            <select class="form-select" id="callerVoice" name="caller_voice_id" required>
+                                <option value="">Loading voices...</option>
+                            </select>
+                            <button class="btn btn-outline-secondary" type="button" id="previewCaller" disabled>
+                                <i class="bi bi-volume-up"></i> Preview
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Emotional, varied voice for the emergency caller
+                        </div>
+                    </div>
+
+                    <!-- Call Duration Selection -->
+                    <div class="mb-3">
+                        <label for="callDuration" class="form-label fw-bold">
+                            <i class="bi bi-clock"></i>
+                            Target Call Duration
+                        </label>
+                        <select class="form-select" id="callDuration" name="call_duration">
+                            <option value="30">30 seconds (Quick)</option>
+                            <option value="60" selected>1 minute (Standard)</option>
+                            <option value="90">1.5 minutes (Detailed)</option>
+                            <option value="120">2 minutes (Extended)</option>
+                            <option value="180">3 minutes (Comprehensive)</option>
+                        </select>
+                        <div class="form-text">
+                            Approximate length of the generated call
+                        </div>
+                    </div>
+
+                    <!-- Audio Format Selection -->
+                    <div class="mb-3">
+                        <label for="audioFormat" class="form-label fw-bold">
+                            <i class="bi bi-file-earmark-music"></i>
+                            Audio Format
+                        </label>
+                        <select class="form-select" id="audioFormat" name="audio_format">
+                            <option value="mp3" selected>MP3 (Compressed)</option>
+                            <option value="wav">WAV (Uncompressed)</option>
+                        </select>
+                    </div>
+
+                    <!-- Diarization Option -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="diarized"
+                                name="diarized"
+                            >
+                            <label class="form-check-label" for="diarized">
+                                <strong>Diarized Audio</strong>
+                                <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" data-bs-placement="right"
+                                   title="Separate speakers on different stereo channels (dispatcher on left, caller on right)"></i>
+                            </label>
+                            <div class="form-text">
+                                Separate audio channels for each speaker (useful for analysis)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+                            <i class="bi bi-play-circle"></i>
+                            Generate Call
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Loading Section -->
+                <div id="loadingSection" class="mt-4 d-none">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mb-0" id="loadingMessage">Generating dialogue...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Section -->
+                <div id="errorSection" class="mt-4 d-none">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span id="errorMessage"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="mt-4 d-none">
+                    <hr>
+                    <h5 class="mb-3">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        Generated Call
+                    </h5>
+
+                    <!-- Audio Player -->
+                    <div class="mb-3">
+                        <audio id="audioPlayer" controls class="w-100"></audio>
+                    </div>
+
+                    <!-- Call Details -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <div class="text-muted small">Duration</div>
+                                    <div class="fw-bold" id="callDuration">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <div class="text-muted small">Exchanges</div>
+                                    <div class="fw-bold" id="callExchanges">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <div class="text-muted small">Format</div>
+                                    <div class="fw-bold" id="callFormat">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Download Button -->
+                    <div class="d-grid">
+                        <a id="downloadBtn" href="#" class="btn btn-success" download>
+                            <i class="bi bi-download"></i>
+                            Download Audio File
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="card mt-4 border-info">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle text-info"></i>
+                    How it works
+                </h6>
+                <ul class="mb-0 small">
+                    <li>Enter a description of an emergency scenario</li>
+                    <li>AI generates realistic dialogue between a 911 dispatcher and caller</li>
+                    <li>Text-to-speech creates natural-sounding audio</li>
+                    <li>Download the audio for testing or training purposes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
