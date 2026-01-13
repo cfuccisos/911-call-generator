@@ -61,20 +61,27 @@ def generate():
     try:
         # 1. Get and validate input
         prompt = request.form.get('prompt', '').strip()
-        protocol_questions = request.form.get('protocol_questions', '').strip()
+        call_type = request.form.get('call_type', 'emergency').strip()
+        dispatcher_protocol_questions = request.form.get('dispatcher_protocol_questions', '').strip()
+        nurse_protocol_questions = request.form.get('nurse_protocol_questions', '').strip()
         call_duration_str = request.form.get('call_duration', '60').strip()
         call_duration = int(call_duration_str) if call_duration_str else 60
         emotion_level = request.form.get('emotion_level', 'concerned').strip()
+        erratic_level = request.form.get('erratic_level', 'none').strip()
         audio_format = request.form.get('audio_format', 'mp3').lower()
         diarized = request.form.get('diarized', 'false').lower() == 'true'
         dispatcher_voice_id = request.form.get('dispatcher_voice_id', '').strip()
         caller_voice_id = request.form.get('caller_voice_id', '').strip()
+        nurse_voice_id = request.form.get('nurse_voice_id', '').strip()
 
-        logger.info(f"Generate request: format={audio_format}, diarized={diarized}, duration={call_duration}s, emotion={emotion_level}")
-        logger.info(f"Voices: dispatcher={dispatcher_voice_id[:20]}..., caller={caller_voice_id[:20]}...")
+        logger.info(f"Generate request: type={call_type}, format={audio_format}, diarized={diarized}, duration={call_duration}s, emotion={emotion_level}, erratic={erratic_level}")
+        logger.info(f"Voices: dispatcher={dispatcher_voice_id[:20]}..., caller={caller_voice_id[:20]}..." +
+                   (f", nurse={nurse_voice_id[:20]}..." if nurse_voice_id else ""))
         logger.info(f"Prompt: {prompt[:100]}...")
-        if protocol_questions:
-            logger.info(f"Protocol questions: {protocol_questions[:100]}...")
+        if dispatcher_protocol_questions:
+            logger.info(f"Dispatcher protocol questions: {dispatcher_protocol_questions[:100]}...")
+        if nurse_protocol_questions:
+            logger.info(f"Nurse protocol questions: {nurse_protocol_questions[:100]}...")
 
         # Validate prompt
         is_valid, error_msg = validate_prompt(
@@ -99,12 +106,23 @@ def generate():
                 {"error": "Both dispatcher and caller voices must be selected"}
             ), 400
 
+        # For warm transfer, nurse voice is required
+        if call_type == 'warm_transfer' and not nurse_voice_id:
+            return jsonify(
+                {"error": "Nurse voice must be selected for warm transfer scenarios"}
+            ), 400
+
         # Get voice information including gender
         dispatcher_info = elevenlabs.get_voice_info(dispatcher_voice_id)
         caller_info = elevenlabs.get_voice_info(caller_voice_id)
+        nurse_info = None
+        if nurse_voice_id:
+            nurse_info = elevenlabs.get_voice_info(nurse_voice_id)
 
         logger.info(f"Dispatcher voice: {dispatcher_info['name']} ({dispatcher_info['gender']})")
         logger.info(f"Caller voice: {caller_info['name']} ({caller_info['gender']})")
+        if nurse_info:
+            logger.info(f"Nurse voice: {nurse_info['name']} ({nurse_info['gender']})")
 
         # 2. Generate dialogue with Gemini
         logger.info("Step 1: Generating dialogue...")
@@ -114,7 +132,11 @@ def generate():
             emotion_level,
             dispatcher_info['gender'],
             caller_info['gender'],
-            protocol_questions
+            dispatcher_protocol_questions,
+            call_type,
+            nurse_protocol_questions,
+            nurse_info['gender'] if nurse_info else 'unknown',
+            erratic_level
         )
         dialogue = dialogue_data['dialogue']
         metadata = dialogue_data.get('metadata', {})
@@ -131,6 +153,11 @@ def generate():
                 audio_bytes = elevenlabs.generate_dispatcher_audio(
                     item['text'],
                     dispatcher_voice_id
+                )
+            elif item['speaker'] == 'nurse':
+                audio_bytes = elevenlabs.generate_nurse_audio(
+                    item['text'],
+                    nurse_voice_id
                 )
             else:  # caller
                 audio_bytes = elevenlabs.generate_caller_audio(

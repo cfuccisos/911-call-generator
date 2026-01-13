@@ -8,15 +8,36 @@ This tool is designed for testing and training purposes, allowing developers and
 
 ## Features
 
-- **AI-Generated Dialogue**: Uses Google Gemini to create realistic conversations between a 911 dispatcher and caller
+### Call Types
+- **Emergency Call (Dispatcher ↔ Caller)**: Standard 911 emergency call with dispatcher and caller
+- **Dispatcher Transfer (Dispatcher ↔ Dispatcher)**: Professional transfer between dispatchers or to supervisors
+- **Warm Transfer to Nurse (Dispatcher → Nurse → Caller)**: 3-speaker medical triage scenarios where dispatcher transfers caller to nurse
+
+### AI & Voice
+- **AI-Generated Dialogue**: Uses Google Gemini to create realistic conversations with natural flow
 - **High-Quality Voice Synthesis**: Leverages ElevenLabs TTS for natural-sounding audio
 - **Voice Selection**: Choose from 25+ professional voices with real-time preview
-- **Emotion Control**: Adjust caller emotion level from calm to hysterical
+- **Gender-Aware Generation**: Dialogue adapts to match selected voice genders and uses appropriate pronouns
+
+### Caller Behavior Control
+- **Emotion Control**: Adjust caller emotion level from calm to hysterical (5 levels)
+- **Erratic Behavior Control**: Configure how difficult the caller is - from focused to highly erratic/incoherent (5 levels)
+  - Control rambling, interrupting, going off-topic, and coherence
+  - Perfect for training dispatchers to handle difficult callers
+
+### Training Features
+- **Protocol Questions**: Add specific questions that must be asked during calls
+  - Separate protocol questions for dispatcher and nurse in warm transfers
+  - Questions are naturally integrated into the conversation
+  - Ideal for telecommunicator training and quality assurance
+
+### Audio Options
 - **Duration Control**: Set target call length from 30 seconds to 3 minutes
-- **Gender-Aware Generation**: Dialogue adapts to match selected voice genders
 - **Multiple Audio Formats**: Export as MP3 or WAV
-- **Diarization Option**: Create stereo audio with speakers on separate channels (dispatcher on left, caller on right)
-- **Prompt History**: Save and reload previous generation settings
+- **Diarization Option**: Create stereo audio with speakers on separate channels (useful for analysis)
+
+### User Experience
+- **Prompt History**: Save and reload previous generation settings (last 10 prompts)
 - **Web Interface**: User-friendly browser-based interface with Bootstrap 5
 - **Auto-Cleanup**: Automatically removes old audio files to save disk space
 
@@ -125,20 +146,34 @@ pip install -r requirements.txt
 
 ### Generating a Call
 
-1. **Enter a Scenario**: Describe the emergency situation in the text area
+1. **Select Call Type**:
+   - **Emergency Call**: Standard dispatcher-to-caller conversation
+   - **Dispatcher Transfer**: Transfer between two dispatchers
+   - **Warm Transfer to Nurse**: 3-speaker medical triage (dispatcher introduces caller to nurse)
+
+2. **Enter a Scenario**: Describe the situation in the text area
    - Example: "Car accident on Highway 101 with multiple injuries"
+   - For warm transfers: "Caller experiencing chest pain and shortness of breath"
    - Keep it under 500 characters
 
-2. **Select Voices**:
+3. **Add Protocol Questions** (Optional):
+   - Click "Add Protocol Questions" to expand this section
+   - Enter specific questions that must be asked (one per line)
+   - For warm transfers, you can set separate questions for dispatcher and nurse
+   - Example dispatcher questions: "What is the exact address?", "Are there any weapons?"
+   - Example nurse questions: "What medications are you taking?", "Do you have any allergies?"
+
+4. **Select Voices**:
    - **Dispatcher Voice**: Choose from professional, calm voices
-   - **Caller Voice**: Choose from varied, emotional voices
+   - **Caller Voice** (or Second Dispatcher Voice): Choose from varied voices
+   - **Nurse Voice** (warm transfer only): Choose a calm, professional voice
    - Click the **Preview** button to hear a sample of each voice before generating
 
-3. **Set Call Duration**:
+5. **Set Call Duration**:
    - Choose target length from 30 seconds to 3 minutes
    - Longer durations generate more detailed conversations
 
-4. **Choose Emotion Level**:
+6. **Choose Emotion Level** (Emergency/Warm Transfer only):
    - **Calm**: Composed and clear speech
    - **Concerned**: Worried but coherent (default)
    - **Anxious**: Nervous and stressed
@@ -146,30 +181,108 @@ pip install -r requirements.txt
    - **Hysterical**: Extremely emotional
    - This affects both dialogue content and voice characteristics
 
-5. **Select Audio Format**:
+7. **Configure Erratic Behavior** (Emergency/Warm Transfer only):
+   - **None**: Focused and coherent (default)
+   - **Slight**: Minor rambling or tangents
+   - **Moderate**: Some difficulty staying on topic
+   - **High**: Frequent interruptions and tangents
+   - **Extreme**: Very difficult to manage, highly incoherent
+   - Perfect for training on handling difficult callers
+
+8. **Select Audio Format**:
    - **MP3**: Compressed format, smaller file size
    - **WAV**: Uncompressed format, higher quality
 
-6. **Enable Diarization** (optional):
+9. **Enable Diarization** (optional):
    - Check this box to create stereo audio with speakers on separate channels
    - Useful for analysis or processing tools that need speaker separation
-   - Dispatcher on left channel, caller on right channel
+   - For 2-speaker calls: Speaker 1 on left, Speaker 2 on right
 
-7. **Click "Generate Call"**: The process takes 10-30 seconds depending on dialogue length
+10. **Click "Generate Call"**: The process takes 10-30 seconds depending on dialogue length
 
-8. **Play and Download**: Once generated, you can play the audio in the browser or download it
+11. **Play and Download**: Once generated, you can play the audio in the browser or download it
 
-9. **Use History**: Your recent prompts are saved and can be reloaded with the "Load" button
+12. **Use History**: Your recent prompts are saved and can be reloaded with the "Load" button
 
 ### Example Scenarios
 
-Here are some example prompts you can try:
-
+**Emergency Calls (Dispatcher ↔ Caller):**
 - "Medical emergency: elderly person fell and can't get up, possible hip fracture"
 - "Fire reported in apartment building, smoke visible from multiple floors"
 - "Traffic accident: two-vehicle collision at Main St and Oak Ave intersection"
 - "Domestic disturbance: loud argument and sounds of breaking glass"
 - "Suspicious person attempting to break into a vehicle in mall parking lot"
+
+**Dispatcher Transfers (Dispatcher ↔ Dispatcher):**
+- "Active structure fire at 2455 Oak Street, two-alarm response, transferring to Battalion Chief"
+- "Armed robbery in progress at convenience store, multiple suspects, transferring to SWAT commander"
+- "Multi-vehicle accident on I-95 with entrapment, transferring to fire operations"
+- "Missing child case with possible abduction, transferring to detective unit"
+
+**Warm Transfers to Nurse (Dispatcher → Nurse → Caller):**
+- "Caller experiencing severe chest pain radiating to left arm, shortness of breath"
+- "Possible stroke: sudden weakness on one side, slurred speech, confusion"
+- "Difficulty breathing, history of asthma, ran out of inhaler medication"
+- "High fever with severe headache and stiff neck, possible meningitis"
+- "Diabetic emergency: confusion, sweating, shaking"
+
+### Sample Configurations
+
+Here are some tested configurations you can try:
+
+**Basic Emergency Call:**
+- **Call Type**: Emergency Call
+- **Prompt**: "Car accident on Highway 101 with multiple injuries"
+- **Duration**: 60 seconds
+- **Emotion**: Concerned
+- **Erratic Level**: None
+
+**High-Stress Traffic Accident:**
+- **Call Type**: Emergency Call
+- **Prompt**: "Car accident on Highway 101"
+- **Duration**: 60 seconds
+- **Emotion**: Concerned
+- **Erratic Level**: High (caller difficult to keep focused)
+
+**Critical Medical Emergency:**
+- **Call Type**: Emergency Call
+- **Prompt**: "Possible heart attack, chest pain"
+- **Duration**: 60 seconds
+- **Emotion**: Panicked
+- **Erratic Level**: Extreme (highly incoherent, jumping topics)
+
+**Dispatcher Transfer with Protocol:**
+- **Call Type**: Dispatcher Transfer
+- **Prompt**: "Active structure fire at 2455 Oak Street, two-alarm response, multiple units on scene. Fire has spread to adjacent building."
+- **Duration**: 60 seconds
+- **Protocol Questions**:
+  - What is the current status of evacuation?
+  - How many units are currently on scene?
+  - Are there any special hazards?
+
+**Emergency Call with Protocol Questions:**
+- **Call Type**: Emergency Call
+- **Prompt**: "Car accident on Highway 101 with injuries"
+- **Duration**: 60 seconds
+- **Emotion**: Concerned
+- **Dispatcher Protocol Questions**:
+  - What is the exact mile marker?
+  - How many vehicles are involved?
+  - Are there any hazards on the road?
+
+**Warm Transfer to Nurse with Dual Protocols:**
+- **Call Type**: Warm Transfer to Nurse
+- **Prompt**: "Caller experiencing severe chest pain radiating to left arm, shortness of breath. Started 20 minutes ago. Has history of high blood pressure."
+- **Duration**: 90 seconds
+- **Emotion**: Anxious
+- **Erratic Level**: Slight
+- **Dispatcher Protocol Questions**:
+  - What is the caller's phone number?
+  - What is the caller's location?
+- **Nurse Protocol Questions**:
+  - On a scale of 1-10, how severe is the pain?
+  - Are you currently taking any medications?
+  - Do you have any known allergies?
 
 ## Project Structure
 
@@ -210,12 +323,17 @@ Generate 911 call audio from prompt.
 
 **Parameters**:
 - `prompt` (string): Emergency scenario description
+- `call_type` (string): Type of call - 'emergency', 'transfer', or 'warm_transfer'
 - `call_duration` (integer): Target duration in seconds (30-180)
 - `emotion_level` (string): Caller emotion level ('calm', 'concerned', 'anxious', 'panicked', 'hysterical')
+- `erratic_level` (string): Caller erratic behavior level ('none', 'slight', 'moderate', 'high', 'extreme')
+- `dispatcher_protocol_questions` (string): Optional protocol questions for dispatcher (one per line)
+- `nurse_protocol_questions` (string): Optional protocol questions for nurse (one per line, warm_transfer only)
 - `audio_format` (string): 'mp3' or 'wav'
 - `diarized` (string): 'true' or 'false'
 - `dispatcher_voice_id` (string): ElevenLabs voice ID for dispatcher
 - `caller_voice_id` (string): ElevenLabs voice ID for caller
+- `nurse_voice_id` (string): ElevenLabs voice ID for nurse (warm_transfer only)
 
 **Response**:
 ```json
@@ -367,27 +485,48 @@ For issues or questions:
 
 ## Recent Updates
 
+### New Call Types & Scenarios
+- **Warm Transfer to Nurse**: 3-speaker medical triage scenarios (dispatcher, nurse, caller)
+- **Dispatcher Transfer**: Professional transfer scenarios between dispatchers
+- **Call Type Selection**: Choose between emergency, transfer, and warm transfer scenarios
+- Dynamic UI that adapts based on selected call type
+
+### Advanced Training Features
+- **Protocol Questions**: Add specific questions that must be asked during calls
+  - Separate protocol questions for dispatcher and nurse in warm transfers
+  - Questions naturally integrated into dialogue
+  - Perfect for telecommunicator training and quality assurance
+- **Erratic Behavior Control**: Configure caller difficulty from focused to highly erratic (5 levels)
+  - Control rambling, interrupting, going off-topic, and coherence
+  - Independent from emotion level for precise scenario control
+  - Ideal for training on difficult caller management
+
 ### Voice & Audio Improvements
 - Dynamic voice selection with 25+ voices
 - Real-time voice preview before generation
-- Gender-aware dialogue generation
+- Gender-aware dialogue generation with proper pronouns
+- Third voice support for warm transfer scenarios (nurse)
 - Fixed "911" pronunciation (now "nine one one" instead of "nine eleven")
 - Cleaned markdown formatting from TTS output
 
 ### User Experience
 - Call duration selector (30s to 3 minutes)
 - Caller emotion control (5 levels: calm to hysterical)
+- Erratic behavior control (5 levels: none to extreme)
+- Collapsible protocol questions section
 - Prompt history with save/load functionality (last 10 prompts)
-- Disabled audio autoplay (user-initiated playback)
+- Context-aware labels and help text based on call type
 - Fixed form state persistence issues
 
 ### Technical Enhancements
 - Voice stability adjustment based on emotion level
+- Nurse voice generation with professional, calm tone
 - Gender detection from ElevenLabs API
-- Context-aware prompt engineering for LLM
-- LocalStorage-based history management
+- Context-aware prompt engineering for LLM with behavior modifiers
+- LocalStorage-based history management with backward compatibility
 - Enhanced text preprocessing for cleaner speech
 - XSS protection for user input
+- Support for 3-speaker dialogue validation
 
 ## Credits
 

@@ -143,6 +143,25 @@ class ElevenLabsService:
             clarity=0.75
         )
 
+    def generate_nurse_audio(self, text: str, voice_id: str) -> bytes:
+        """
+        Generate audio for nurse with calm, professional voice settings.
+
+        Args:
+            text: Nurse's text
+            voice_id: Voice ID for nurse
+
+        Returns:
+            Audio bytes
+        """
+        # Moderate stability for calm, professional, but conversational tone
+        return self.text_to_speech(
+            text=text,
+            voice_id=voice_id,
+            stability=0.6,
+            clarity=0.75
+        )
+
     def get_voice_info(self, voice_id: str) -> dict:
         """
         Get information about a specific voice by ID.

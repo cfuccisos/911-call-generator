@@ -32,6 +32,14 @@ $(document).ready(function() {
         $('#toggleProtocolBtn').html('<i class="bi bi-plus-circle"></i> Add Protocol Questions (Optional)');
     });
 
+    // Call type change handler
+    $('#callType').on('change', function() {
+        updateUIForCallType($(this).val());
+    });
+
+    // Initialize UI based on default call type
+    updateUIForCallType($('#callType').val());
+
     // Preview button handlers
     $('#previewDispatcher').on('click', function() {
         const voiceId = $('#dispatcherVoice').val();
@@ -47,6 +55,13 @@ $(document).ready(function() {
         }
     });
 
+    $('#previewNurse').on('click', function() {
+        const voiceId = $('#nurseVoice').val();
+        if (voiceId) {
+            previewVoice(voiceId, 'I understand. Can you tell me more about your symptoms?');
+        }
+    });
+
     // Enable preview buttons when voice is selected
     $('#dispatcherVoice').on('change', function() {
         $('#previewDispatcher').prop('disabled', !$(this).val());
@@ -54,6 +69,10 @@ $(document).ready(function() {
 
     $('#callerVoice').on('change', function() {
         $('#previewCaller').prop('disabled', !$(this).val());
+    });
+
+    $('#nurseVoice').on('change', function() {
+        $('#previewNurse').prop('disabled', !$(this).val());
     });
 
     // Character counter for prompt
@@ -91,13 +110,17 @@ $(document).ready(function() {
         // Get form data
         const formData = {
             prompt: $('#prompt').val().trim(),
-            protocol_questions: $('#protocolQuestions').val().trim(),
+            call_type: $('#callType').val(),
+            dispatcher_protocol_questions: $('#dispatcherProtocolQuestions').val().trim(),
+            nurse_protocol_questions: $('#nurseProtocolQuestions').val().trim(),
             call_duration: $('#callDuration').val(),
             emotion_level: $('#emotionLevel').val(),
+            erratic_level: $('#erraticLevel').val(),
             audio_format: $('#audioFormat').val(),
             diarized: $('#diarized').is(':checked') ? 'true' : 'false',
             dispatcher_voice_id: $('#dispatcherVoice').val(),
-            caller_voice_id: $('#callerVoice').val()
+            caller_voice_id: $('#callerVoice').val(),
+            nurse_voice_id: $('#nurseVoice').val() || ''
         };
 
         // Update loading message after a delay
@@ -167,16 +190,21 @@ function disableForm() {
     $('#generateBtn').prop('disabled', true).html(
         '<span class="spinner-border spinner-border-sm" role="status"></span> Generating...'
     );
+    $('#callType').prop('disabled', true);
     $('#prompt').prop('disabled', true);
-    $('#protocolQuestions').prop('disabled', true);
+    $('#dispatcherProtocolQuestions').prop('disabled', true);
+    $('#nurseProtocolQuestions').prop('disabled', true);
     $('#callDuration').prop('disabled', true);
     $('#emotionLevel').prop('disabled', true);
+    $('#erraticLevel').prop('disabled', true);
     $('#dispatcherVoice').prop('disabled', true);
     $('#callerVoice').prop('disabled', true);
+    $('#nurseVoice').prop('disabled', true);
     $('#audioFormat').prop('disabled', true);
     $('#diarized').prop('disabled', true);
     $('#previewDispatcher').prop('disabled', true);
     $('#previewCaller').prop('disabled', true);
+    $('#previewNurse').prop('disabled', true);
 }
 
 /**
@@ -186,16 +214,21 @@ function enableForm() {
     $('#generateBtn').prop('disabled', false).html(
         '<i class="bi bi-play-circle"></i> Generate Call'
     );
+    $('#callType').prop('disabled', false);
     $('#prompt').prop('disabled', false);
-    $('#protocolQuestions').prop('disabled', false);
+    $('#dispatcherProtocolQuestions').prop('disabled', false);
+    $('#nurseProtocolQuestions').prop('disabled', false);
     $('#callDuration').prop('disabled', false);
     $('#emotionLevel').prop('disabled', false);
+    $('#erraticLevel').prop('disabled', false);
     $('#dispatcherVoice').prop('disabled', false);
     $('#callerVoice').prop('disabled', false);
+    $('#nurseVoice').prop('disabled', false);
     $('#audioFormat').prop('disabled', false);
     $('#diarized').prop('disabled', false);
     $('#previewDispatcher').prop('disabled', $('#dispatcherVoice').val() === '');
     $('#previewCaller').prop('disabled', $('#callerVoice').val() === '');
+    $('#previewNurse').prop('disabled', $('#nurseVoice').val() === '');
 }
 
 /**
@@ -286,14 +319,17 @@ function loadVoices() {
 function populateVoiceDropdowns(voices) {
     const dispatcherSelect = $('#dispatcherVoice');
     const callerSelect = $('#callerVoice');
+    const nurseSelect = $('#nurseVoice');
 
     // Clear existing options
     dispatcherSelect.empty();
     callerSelect.empty();
+    nurseSelect.empty();
 
     // Add default option
     dispatcherSelect.append('<option value="">Select a voice...</option>');
     callerSelect.append('<option value="">Select a voice...</option>');
+    nurseSelect.append('<option value="">Select a voice...</option>');
 
     // Add voice options
     voices.forEach(function(voice) {
@@ -304,6 +340,7 @@ function populateVoiceDropdowns(voices) {
 
         dispatcherSelect.append(option.clone());
         callerSelect.append(option.clone());
+        nurseSelect.append(option.clone());
     });
 
     // Set default selections if available
@@ -322,12 +359,21 @@ function populateVoiceDropdowns(voices) {
             v.name.toLowerCase().includes('elli')
         ) || voices[Math.min(1, voices.length - 1)];
 
+        // Try to find calm/professional voices for nurse
+        const nurseVoice = voices.find(v =>
+            v.name.toLowerCase().includes('sarah') ||
+            v.name.toLowerCase().includes('grace') ||
+            v.name.toLowerCase().includes('domi')
+        ) || voices[Math.min(2, voices.length - 1)];
+
         dispatcherSelect.val(dispatcherVoice.voice_id);
         callerSelect.val(callerVoice.voice_id);
+        nurseSelect.val(nurseVoice.voice_id);
 
         // Enable preview buttons
         $('#previewDispatcher').prop('disabled', false);
         $('#previewCaller').prop('disabled', false);
+        $('#previewNurse').prop('disabled', false);
     }
 
     console.log('Voice dropdowns populated with ' + voices.length + ' voices');
@@ -340,6 +386,7 @@ function showVoiceLoadError() {
     const errorOption = '<option value="">Error loading voices - please refresh</option>';
     $('#dispatcherVoice').html(errorOption);
     $('#callerVoice').html(errorOption);
+    $('#nurseVoice').html(errorOption);
 }
 
 /**
@@ -402,9 +449,12 @@ function saveToHistory(formData) {
             id: Date.now(),
             timestamp: new Date().toISOString(),
             prompt: formData.prompt,
-            protocol_questions: formData.protocol_questions || '',
+            call_type: formData.call_type,
+            dispatcher_protocol_questions: formData.dispatcher_protocol_questions || '',
+            nurse_protocol_questions: formData.nurse_protocol_questions || '',
             call_duration: formData.call_duration,
             emotion_level: formData.emotion_level,
+            erratic_level: formData.erratic_level,
             audio_format: formData.audio_format,
             diarized: formData.diarized === 'true'
         };
@@ -446,6 +496,8 @@ function loadHistory() {
             const date = new Date(entry.timestamp);
             const timeStr = date.toLocaleString();
             const emotionLabel = entry.emotion_level.charAt(0).toUpperCase() + entry.emotion_level.slice(1);
+            const callTypeLabel = entry.call_type === 'transfer' ? 'Transfer' : 'Emergency';
+            const callTypeBadge = entry.call_type === 'transfer' ? 'bg-primary' : 'bg-secondary';
 
             const historyItem = $(`
                 <div class="card mb-2 history-item" data-id="${entry.id}" style="cursor: pointer;">
@@ -455,9 +507,10 @@ function loadHistory() {
                                 <div class="text-muted small">${timeStr}</div>
                                 <div class="mt-1">${escapeHtml(entry.prompt)}</div>
                                 <div class="mt-2">
+                                    <span class="badge ${callTypeBadge}">${callTypeLabel}</span>
                                     <span class="badge bg-secondary">${entry.call_duration}s</span>
-                                    <span class="badge bg-info">${emotionLabel}</span>
-                                    ${entry.protocol_questions ? '<span class="badge bg-warning text-dark">Protocol</span>' : ''}
+                                    ${entry.call_type !== 'transfer' ? `<span class="badge bg-info">${emotionLabel}</span>` : ''}
+                                    ${(entry.dispatcher_protocol_questions || entry.nurse_protocol_questions || entry.protocol_questions) ? '<span class="badge bg-warning text-dark">Protocol</span>' : ''}
                                     ${entry.diarized ? '<span class="badge bg-success">Diarized</span>' : ''}
                                 </div>
                             </div>
@@ -493,10 +546,18 @@ function loadHistoryItem(id) {
 
         if (entry) {
             // Fill form with history data
+            $('#callType').val(entry.call_type || 'emergency');
+            updateUIForCallType(entry.call_type || 'emergency');
+
             $('#prompt').val(entry.prompt);
-            $('#protocolQuestions').val(entry.protocol_questions || '');
+
+            // Handle both old and new protocol question formats
+            $('#dispatcherProtocolQuestions').val(entry.dispatcher_protocol_questions || entry.protocol_questions || '');
+            $('#nurseProtocolQuestions').val(entry.nurse_protocol_questions || '');
+
             $('#callDuration').val(entry.call_duration);
             $('#emotionLevel').val(entry.emotion_level);
+            $('#erraticLevel').val(entry.erratic_level || 'none');
             $('#audioFormat').val(entry.audio_format);
             $('#diarized').prop('checked', entry.diarized);
 
@@ -504,7 +565,7 @@ function loadHistoryItem(id) {
             $('#charCount').text(entry.prompt.length);
 
             // If there are protocol questions, expand the section
-            if (entry.protocol_questions) {
+            if (entry.dispatcher_protocol_questions || entry.nurse_protocol_questions || entry.protocol_questions) {
                 const protocolSection = $('#protocolQuestionsSection');
                 if (!protocolSection.hasClass('show')) {
                     protocolSection.collapse('show');
@@ -533,4 +594,82 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+/**
+ * Update UI labels and visibility based on call type
+ */
+function updateUIForCallType(callType) {
+    if (callType === 'transfer') {
+        // Dispatcher-to-dispatcher transfer
+        $('#promptLabel').text('Transfer Scenario Description');
+        $('#prompt').attr('placeholder', 'Describe the incident being transferred... (e.g., "Active shooter situation at downtown mall, transferring to SWAT commander")');
+
+        $('#voice1Label').text('Transferring Dispatcher Voice');
+        $('#voice1Help').text('Initial dispatcher transferring the call');
+
+        $('#voice2Label').text('Receiving Dispatcher Voice');
+        $('#voice2Help').text('Dispatcher or supervisor receiving the transfer');
+
+        // Protocol questions
+        $('#dispatcherProtocolLabel').text('Protocol Questions');
+        $('#dispatcherProtocolHelp').text('Specific questions the transferring dispatcher must ask');
+        $('#nurseProtocolSection').hide();
+
+        // Hide emotion level and erratic level for dispatcher transfers
+        $('#emotionLevelSection').hide();
+        $('#erraticLevelSection').hide();
+
+        // Hide nurse voice section
+        $('#nurseVoiceSection').hide();
+        $('#nurseVoice').prop('required', false);
+
+    } else if (callType === 'warm_transfer') {
+        // Warm transfer to nurse (3-way: dispatcher -> nurse -> caller)
+        $('#promptLabel').text('Warm Transfer Scenario Description');
+        $('#prompt').attr('placeholder', 'Describe the medical situation... (e.g., "Caller experiencing chest pain and shortness of breath, transferring to nurse triage")');
+
+        $('#voice1Label').text('Dispatcher Voice');
+        $('#voice1Help').text('911 dispatcher initiating the transfer');
+
+        $('#voice2Label').text('Caller Voice');
+        $('#voice2Help').text('Person calling with medical concern');
+
+        // Protocol questions - show both sections
+        $('#dispatcherProtocolLabel').text('Dispatcher Protocol Questions');
+        $('#dispatcherProtocolHelp').text('Questions the dispatcher should ask before transferring');
+        $('#nurseProtocolSection').show();
+
+        // Show nurse voice section
+        $('#nurseVoiceSection').show();
+        $('#nurseVoice').prop('required', true);
+
+        // Show emotion level and erratic level for caller
+        $('#emotionLevelSection').show();
+        $('#erraticLevelSection').show();
+
+    } else {
+        // Emergency call (dispatcher to caller)
+        $('#promptLabel').text('Emergency Scenario Description');
+        $('#prompt').attr('placeholder', 'Describe the emergency scenario... (e.g., "Car accident on Highway 101 with multiple injuries")');
+
+        $('#voice1Label').text('Dispatcher Voice');
+        $('#voice1Help').text('Professional, calm voice for the 911 dispatcher');
+
+        $('#voice2Label').text('Caller Voice');
+        $('#voice2Help').text('Emotional, varied voice for the emergency caller');
+
+        // Protocol questions
+        $('#dispatcherProtocolLabel').text('Protocol Questions');
+        $('#dispatcherProtocolHelp').text('Specific questions the dispatcher must ask during the call');
+        $('#nurseProtocolSection').hide();
+
+        // Show emotion level and erratic level for emergency calls
+        $('#emotionLevelSection').show();
+        $('#erraticLevelSection').show();
+
+        // Hide nurse voice section
+        $('#nurseVoiceSection').hide();
+        $('#nurseVoice').prop('required', false);
+    }
 }

@@ -26,7 +26,11 @@ class GeminiService:
         emotion_level: str = 'concerned',
         dispatcher_gender: str = 'unknown',
         caller_gender: str = 'unknown',
-        protocol_questions: str = ''
+        dispatcher_protocol_questions: str = '',
+        call_type: str = 'emergency',
+        nurse_protocol_questions: str = '',
+        nurse_gender: str = 'unknown',
+        erratic_level: str = 'none'
     ) -> dict:
         """
         Generate 911 call dialogue based on scenario.
@@ -37,7 +41,11 @@ class GeminiService:
             emotion_level: Caller emotion level (calm, concerned, anxious, panicked, hysterical)
             dispatcher_gender: Gender of dispatcher voice (male, female, unknown)
             caller_gender: Gender of caller voice (male, female, unknown)
-            protocol_questions: Optional specific questions dispatcher must ask
+            dispatcher_protocol_questions: Optional specific questions dispatcher must ask
+            call_type: Type of call - 'emergency', 'transfer', or 'warm_transfer'
+            nurse_protocol_questions: Optional specific questions nurse must ask (warm_transfer only)
+            nurse_gender: Gender of nurse voice (male, female, unknown)
+            erratic_level: Caller erratic behavior level (none, slight, moderate, high, extreme)
 
         Returns:
             Dictionary with structure:
@@ -56,11 +64,16 @@ class GeminiService:
         Raises:
             ValueError: If dialogue generation or parsing fails
         """
-        prompt = self._build_prompt(scenario, target_duration, emotion_level, dispatcher_gender, caller_gender, protocol_questions)
+        prompt = self._build_prompt(scenario, target_duration, emotion_level, dispatcher_gender, caller_gender, dispatcher_protocol_questions, call_type, nurse_protocol_questions, nurse_gender, erratic_level)
 
         try:
-            protocol_msg = f", protocol: {len(protocol_questions.splitlines())} questions" if protocol_questions else ""
-            self.logger.info(f"Generating dialogue for scenario: {scenario[:50]}... (target: {target_duration}s, emotion: {emotion_level}, dispatcher: {dispatcher_gender}, caller: {caller_gender}{protocol_msg})")
+            protocol_msg = ""
+            if dispatcher_protocol_questions:
+                protocol_msg += f", dispatcher protocol: {len(dispatcher_protocol_questions.splitlines())} questions"
+            if nurse_protocol_questions:
+                protocol_msg += f", nurse protocol: {len(nurse_protocol_questions.splitlines())} questions"
+
+            self.logger.info(f"Generating dialogue for scenario: {scenario[:50]}... (type: {call_type}, target: {target_duration}s, emotion: {emotion_level}, dispatcher: {dispatcher_gender}, caller: {caller_gender}{protocol_msg})")
             response = self.model.generate_content(prompt)
             dialogue_data = self._parse_response(response.text)
             self.logger.info(f"Generated {len(dialogue_data['dialogue'])} dialogue exchanges")
@@ -76,7 +89,11 @@ class GeminiService:
         emotion_level: str = 'concerned',
         dispatcher_gender: str = 'unknown',
         caller_gender: str = 'unknown',
-        protocol_questions: str = ''
+        dispatcher_protocol_questions: str = '',
+        call_type: str = 'emergency',
+        nurse_protocol_questions: str = '',
+        nurse_gender: str = 'unknown',
+        erratic_level: str = 'none'
     ) -> str:
         """
         Build prompt for Gemini to generate realistic 911 dialogue.
@@ -87,7 +104,11 @@ class GeminiService:
             emotion_level: Caller emotion level
             dispatcher_gender: Gender of dispatcher
             caller_gender: Gender of caller
-            protocol_questions: Optional specific questions to include
+            dispatcher_protocol_questions: Optional specific questions dispatcher should ask
+            call_type: Type of call - 'emergency', 'transfer', or 'warm_transfer'
+            nurse_protocol_questions: Optional specific questions nurse should ask
+            nurse_gender: Gender of nurse
+            erratic_level: Caller erratic behavior level
 
         Returns:
             Formatted prompt string
@@ -115,6 +136,17 @@ class GeminiService:
         }
         emotion_desc = emotion_descriptions.get(emotion_level, emotion_descriptions['concerned'])
 
+        # Map erratic level to behavior description for prompt
+        erratic_descriptions = {
+            'none': '',
+            'slight': 'The caller occasionally goes on minor tangents or provides slightly unnecessary details, but stays mostly focused.',
+            'moderate': 'The caller has some difficulty staying on topic, occasionally rambles, and may need to be redirected by the dispatcher.',
+            'high': 'The caller frequently interrupts, jumps between topics, rambles significantly, and is difficult to keep focused. The dispatcher must work hard to extract necessary information.',
+            'extreme': 'The caller is highly erratic and incoherent, constantly interrupting, jumping wildly between unrelated topics, providing confusing or contradictory information, making it very challenging for the dispatcher to gather critical details.'
+        }
+        erratic_desc = erratic_descriptions.get(erratic_level, '')
+        erratic_note = f"\n\nIMPORTANT - Caller Behavior:\n{erratic_desc}" if erratic_desc else ""
+
         # Build gender context for the prompt
         dispatcher_desc = ""
         if dispatcher_gender in ['male', 'female']:
@@ -126,20 +158,131 @@ class GeminiService:
 
         gender_context = f"{dispatcher_desc}{caller_desc}" if (dispatcher_desc or caller_desc) else ""
 
-        # Build protocol questions section if provided
-        protocol_section = ""
-        if protocol_questions:
-            protocol_section = f"""
+        # Build gender context for nurse
+        nurse_desc = ""
+        if nurse_gender in ['male', 'female']:
+            nurse_desc = f" The nurse is {nurse_gender}."
 
-IMPORTANT - Protocol Questions:
-The dispatcher MUST ask these specific questions during the call (integrate them naturally into the conversation):
-{protocol_questions}
+        # Build protocol questions sections if provided
+        dispatcher_protocol_section = ""
+        if dispatcher_protocol_questions:
+            dispatcher_protocol_section = f"""
+
+IMPORTANT - Dispatcher Protocol Questions:
+The dispatcher MUST ask these specific questions during their part of the call (integrate them naturally):
+{dispatcher_protocol_questions}
 """
 
-        return f"""You are an expert in creating realistic 911 emergency call scenarios for training purposes.
+        nurse_protocol_section = ""
+        if nurse_protocol_questions:
+            nurse_protocol_section = f"""
+
+IMPORTANT - Nurse Protocol Questions:
+The nurse MUST ask these specific questions during the assessment (integrate them naturally):
+{nurse_protocol_questions}
+"""
+
+        # Build different prompts based on call type
+        if call_type == 'warm_transfer':
+            # Warm transfer to nurse (3-speaker dialogue)
+            return f"""You are an expert in creating realistic 911 warm transfer scenarios for medical triage training purposes.
+
+Generate a dialogue where a 911 dispatcher transfers a caller to a nurse for medical assessment. The conversation has THREE speakers:
+1. Dispatcher (introduces situation to nurse)
+2. Nurse (asks clarifying questions)
+3. Caller (describes medical condition)
+
+Scenario: {scenario}{dispatcher_protocol_section}{nurse_protocol_section}{erratic_note}
+
+Requirements:
+1. Start with dispatcher explaining situation to nurse (2-3 exchanges)
+2. Dispatcher brings caller into conversation: "I'm going to connect you with our nurse now"
+3. Nurse takes over, asking caller medical questions (6-10 exchanges)
+4. Include {exchange_range} exchanges total (target duration: ~{target_duration} seconds)
+5. Dispatcher voice: professional, brief{dispatcher_desc}
+6. Nurse voice: calm, professional, asks assessment questions{nurse_desc}
+7. Caller emotion level: {emotion_desc}{caller_desc}
+8. Nurse asks protocol questions: chief complaint, symptoms, duration, medications, allergies
+9. Use appropriate pronouns and references based on the gender of each speaker
+10. If dispatcher protocol questions are provided above, ensure the dispatcher asks them before transferring
+11. If nurse protocol questions are provided above, ensure the nurse asks them during the assessment
+12. Format as JSON with this EXACT structure:
+
+{{
+  "dialogue": [
+    {{"speaker": "dispatcher", "text": "Nurse triage, I have a caller on the line", "pause_after": 0.5}},
+    {{"speaker": "nurse", "text": "Go ahead, what's the situation?", "pause_after": 0.4}},
+    {{"speaker": "dispatcher", "text": "Caller reporting...", "pause_after": 0.6}},
+    {{"speaker": "nurse", "text": "Thank you. Please connect me with the caller", "pause_after": 0.5}},
+    {{"speaker": "dispatcher", "text": "I'm connecting you now", "pause_after": 0.5}},
+    {{"speaker": "nurse", "text": "Hello, this is the triage nurse. Can you tell me what's going on?", "pause_after": 0.7}},
+    {{"speaker": "caller", "text": "I'm having...", "pause_after": 0.8}},
+    {{"speaker": "nurse", "text": "How long have you been experiencing this?", "pause_after": 0.6}}
+  ],
+  "metadata": {{
+    "scenario_type": "medical",
+    "urgency_level": "low/medium/high/critical"
+  }}
+}}
+
+Rules for pauses:
+- Dispatcher: 0.3-0.6 seconds (quick, professional)
+- Nurse: 0.4-0.7 seconds (calm, measured)
+- Caller: 0.6-1.2 seconds (emotional, varied based on urgency)
+- After questions: 0.7-1.0 seconds to allow thinking time
+
+Important:
+- Make the dialogue realistic and natural
+- Nurse should gather: chief complaint, onset, severity, associated symptoms, medical history
+- Caller should sound appropriately concerned based on emotion level
+- Return ONLY valid JSON, no additional text or explanation"""
+
+        elif call_type == 'transfer':
+            # Dispatcher-to-dispatcher transfer
+            return f"""You are an expert in creating realistic 911 dispatcher-to-dispatcher transfer scenarios for training purposes.
+
+Generate a dialogue where one dispatcher is transferring a call/incident to another dispatcher (or supervisor/specialist) based on this scenario:
+{scenario}{dispatcher_protocol_section}
+
+Requirements:
+1. Speaker 1 (transferring dispatcher) should be professional and provide key information{dispatcher_desc}
+2. Speaker 2 (receiving dispatcher) should ask clarifying questions and confirm details{caller_desc}
+3. Include {exchange_range} exchanges total (target duration: ~{target_duration} seconds)
+4. Transferring dispatcher shares: incident type, location, current status, units on scene, special concerns
+5. Receiving dispatcher confirms understanding and may ask for additional details
+6. Both speakers should use professional radio/dispatch terminology
+7. Use appropriate pronouns and references based on the gender of each speaker
+8. If protocol questions are provided above, ensure they are asked naturally within the conversation
+9. Format as JSON with this EXACT structure:
+
+{{
+  "dialogue": [
+    {{"speaker": "dispatcher", "text": "Dispatch 4 to Dispatch 7, transferring a call", "pause_after": 0.5}},
+    {{"speaker": "caller", "text": "Go ahead Dispatch 4", "pause_after": 0.4}},
+    {{"speaker": "dispatcher", "text": "I have a code 3 incident at...", "pause_after": 0.6}}
+  ],
+  "metadata": {{
+    "scenario_type": "medical/fire/police/traffic/other",
+    "urgency_level": "low/medium/high/critical"
+  }}
+}}
+
+Rules for pauses:
+- Both dispatchers use short, professional pauses: 0.3-0.6 seconds
+- After questions: 0.5-0.8 seconds to allow response time
+
+Important:
+- Make the dialogue realistic and professional
+- Include relevant incident details
+- Both speakers should use dispatch terminology and codes where appropriate
+- Return ONLY valid JSON, no additional text or explanation"""
+
+        else:
+            # Emergency call (dispatcher to caller)
+            return f"""You are an expert in creating realistic 911 emergency call scenarios for training purposes.
 
 Generate a dialogue between a 911 dispatcher and a caller based on this scenario:
-{scenario}{protocol_section}
+{scenario}{dispatcher_protocol_section}{erratic_note}
 
 Requirements:
 1. The dispatcher should be professional, calm, and ask relevant questions{dispatcher_desc}
@@ -250,7 +393,7 @@ Important:
                 return False
 
             # Check speaker is valid
-            if item['speaker'] not in ['dispatcher', 'caller']:
+            if item['speaker'] not in ['dispatcher', 'caller', 'nurse']:
                 self.logger.error(f"Item {i} has invalid speaker: {item['speaker']}")
                 return False
 

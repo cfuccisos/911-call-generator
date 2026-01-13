@@ -19,11 +19,27 @@
             <div class="card-body p-4">
                 <!-- Form -->
                 <form id="generateForm">
+                    <!-- Call Type Selection -->
+                    <div class="mb-3">
+                        <label for="callType" class="form-label fw-bold">
+                            <i class="bi bi-telephone"></i>
+                            Call Type
+                        </label>
+                        <select class="form-select" id="callType" name="call_type">
+                            <option value="emergency" selected>Emergency Call (Dispatcher ↔ Caller)</option>
+                            <option value="transfer">Dispatcher Transfer (Dispatcher ↔ Dispatcher)</option>
+                            <option value="warm_transfer">Warm Transfer to Nurse (Dispatcher → Nurse → Caller)</option>
+                        </select>
+                        <div class="form-text">
+                            Type of 911 call to generate
+                        </div>
+                    </div>
+
                     <!-- Prompt Input -->
                     <div class="mb-4">
                         <label for="prompt" class="form-label fw-bold">
                             <i class="bi bi-pencil-square"></i>
-                            Emergency Scenario Description
+                            <span id="promptLabel">Emergency Scenario Description</span>
                         </label>
                         <textarea
                             class="form-control"
@@ -54,29 +70,51 @@
                         </button>
 
                         <div class="collapse mt-3" id="protocolQuestionsSection">
-                            <label for="protocolQuestions" class="form-label fw-bold">
-                                <i class="bi bi-list-check"></i>
-                                Protocol Questions
-                            </label>
-                            <textarea
-                                class="form-control"
-                                id="protocolQuestions"
-                                name="protocol_questions"
-                                rows="3"
-                                maxlength="500"
-                                placeholder="Enter specific questions the dispatcher should ask (one per line)&#10;Example:&#10;- What is the exact address?&#10;- Are there any weapons involved?&#10;- Is anyone injured?"
-                            ></textarea>
-                            <div class="form-text">
-                                Specific questions the dispatcher must ask during the call
+                            <!-- Dispatcher Protocol Questions -->
+                            <div id="dispatcherProtocolSection">
+                                <label for="dispatcherProtocolQuestions" class="form-label fw-bold">
+                                    <i class="bi bi-list-check"></i>
+                                    <span id="dispatcherProtocolLabel">Protocol Questions</span>
+                                </label>
+                                <textarea
+                                    class="form-control"
+                                    id="dispatcherProtocolQuestions"
+                                    name="dispatcher_protocol_questions"
+                                    rows="3"
+                                    maxlength="500"
+                                    placeholder="Enter specific questions the dispatcher should ask (one per line)&#10;Example:&#10;- What is the exact address?&#10;- Are there any weapons involved?&#10;- Is anyone injured?"
+                                ></textarea>
+                                <div class="form-text" id="dispatcherProtocolHelp">
+                                    Specific questions the dispatcher must ask during the call
+                                </div>
+                            </div>
+
+                            <!-- Nurse Protocol Questions (Warm Transfer Only) -->
+                            <div id="nurseProtocolSection" class="mt-3" style="display: none;">
+                                <label for="nurseProtocolQuestions" class="form-label fw-bold">
+                                    <i class="bi bi-list-check"></i>
+                                    Nurse Protocol Questions
+                                </label>
+                                <textarea
+                                    class="form-control"
+                                    id="nurseProtocolQuestions"
+                                    name="nurse_protocol_questions"
+                                    rows="3"
+                                    maxlength="500"
+                                    placeholder="Enter specific questions the nurse should ask (one per line)&#10;Example:&#10;- What medications are you currently taking?&#10;- Do you have any allergies?&#10;- On a scale of 1-10, how severe is the pain?"
+                                ></textarea>
+                                <div class="form-text">
+                                    Specific questions the nurse must ask during the medical assessment
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Dispatcher Voice Selection -->
+                    <!-- First Speaker Voice Selection -->
                     <div class="mb-3">
                         <label for="dispatcherVoice" class="form-label fw-bold">
                             <i class="bi bi-person-badge"></i>
-                            Dispatcher Voice
+                            <span id="voice1Label">Dispatcher Voice</span>
                         </label>
                         <div class="input-group">
                             <select class="form-select" id="dispatcherVoice" name="dispatcher_voice_id" required>
@@ -86,16 +124,16 @@
                                 <i class="bi bi-volume-up"></i> Preview
                             </button>
                         </div>
-                        <div class="form-text">
+                        <div class="form-text" id="voice1Help">
                             Professional, calm voice for the 911 dispatcher
                         </div>
                     </div>
 
-                    <!-- Caller Voice Selection -->
+                    <!-- Second Speaker Voice Selection -->
                     <div class="mb-3">
                         <label for="callerVoice" class="form-label fw-bold">
                             <i class="bi bi-person-fill"></i>
-                            Caller Voice
+                            <span id="voice2Label">Caller Voice</span>
                         </label>
                         <div class="input-group">
                             <select class="form-select" id="callerVoice" name="caller_voice_id" required>
@@ -105,8 +143,27 @@
                                 <i class="bi bi-volume-up"></i> Preview
                             </button>
                         </div>
-                        <div class="form-text">
+                        <div class="form-text" id="voice2Help">
                             Emotional, varied voice for the emergency caller
+                        </div>
+                    </div>
+
+                    <!-- Third Speaker Voice Selection (Warm Transfer Only) -->
+                    <div class="mb-3" id="nurseVoiceSection" style="display: none;">
+                        <label for="nurseVoice" class="form-label fw-bold">
+                            <i class="bi bi-heart-pulse"></i>
+                            <span id="voice3Label">Nurse Voice</span>
+                        </label>
+                        <div class="input-group">
+                            <select class="form-select" id="nurseVoice" name="nurse_voice_id">
+                                <option value="">Loading voices...</option>
+                            </select>
+                            <button class="btn btn-outline-secondary" type="button" id="previewNurse" disabled>
+                                <i class="bi bi-volume-up"></i> Preview
+                            </button>
+                        </div>
+                        <div class="form-text" id="voice3Help">
+                            Calm, professional voice for the nurse
                         </div>
                     </div>
 
@@ -128,8 +185,8 @@
                         </div>
                     </div>
 
-                    <!-- Caller Emotion Level Selection -->
-                    <div class="mb-3">
+                    <!-- Caller Emotion Level Selection (Emergency Calls Only) -->
+                    <div class="mb-3" id="emotionLevelSection">
                         <label for="emotionLevel" class="form-label fw-bold">
                             <i class="bi bi-emoji-frown"></i>
                             Caller Emotion Level
@@ -143,6 +200,24 @@
                         </select>
                         <div class="form-text">
                             How emotional/distressed the caller sounds
+                        </div>
+                    </div>
+
+                    <!-- Caller Erratic Behavior Level (Emergency & Warm Transfer Calls Only) -->
+                    <div class="mb-3" id="erraticLevelSection">
+                        <label for="erraticLevel" class="form-label fw-bold">
+                            <i class="bi bi-lightning"></i>
+                            Caller Erratic Behavior Level
+                        </label>
+                        <select class="form-select" id="erraticLevel" name="erratic_level">
+                            <option value="none" selected>None - Focused and coherent</option>
+                            <option value="slight">Slight - Minor rambling or tangents</option>
+                            <option value="moderate">Moderate - Some difficulty staying on topic</option>
+                            <option value="high">High - Frequent interruptions and tangents</option>
+                            <option value="extreme">Extreme - Very difficult to manage, highly incoherent</option>
+                        </select>
+                        <div class="form-text">
+                            How erratic/difficult the caller is (rambling, interrupting, going off-topic)
                         </div>
                     </div>
 
