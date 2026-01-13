@@ -1,0 +1,12 @@
+	13.	Chest pain / possible heart attack
+Dispatcher: 911 what’s the location of your emergency
+Caller: 66 Oak Terrace. My dad is having chest pain.
+Dispatcher: How old is he?
+Caller: 58.
+Dispatcher: Is he awake and breathing?
+Caller: Yes, but he’s sweating and says his arm hurts.
+Dispatcher: Has he ever had heart problems?
+Caller: Yes—stents last year.
+Dispatcher: Is the pain severe, and when did it start?
+Caller: About 10 minutes ago and it’s getting worse.
+Dispatcher: EMS is on the way. Have him sit upright, stay calm, and unlock the door if you can.

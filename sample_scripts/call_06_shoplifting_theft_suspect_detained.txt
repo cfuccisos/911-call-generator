@@ -1,0 +1,10 @@
+	6.	Shoplifting / theft suspect detained
+Dispatcher: 911 what’s the location of your emergency
+Caller: 5150 Commerce Plaza, the Target—I’m security.
+Dispatcher: What’s the situation?
+Caller: We have a shoplifter detained in the office. He’s getting aggressive.
+Dispatcher: Any weapons seen?
+Caller: Not seen, but he keeps reaching into his pockets.
+Dispatcher: How many people involved?
+Caller: Just him, one security officer with me.
+Dispatcher: Keep distance and do not search him if it’s unsafe. Officers are en route.

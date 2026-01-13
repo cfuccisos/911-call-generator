@@ -1,0 +1,12 @@
+	5.	Missing child (just happened)
+Dispatcher: 911 what’s the location of your emergency
+Caller: 910 Maple Court—my son is missing.
+Dispatcher: How old is he?
+Caller: He’s 6. His name is Ethan.
+Dispatcher: When did you last see him?
+Caller: Five minutes ago—he was in the backyard.
+Dispatcher: What is he wearing?
+Caller: A red T-shirt, gray shorts, and blue sneakers.
+Dispatcher: Any nearby water—pools, ponds, creeks?
+Caller: There’s a small pond behind the fence line.
+Dispatcher: Start checking that area immediately while staying on the line—help is being dispatched.

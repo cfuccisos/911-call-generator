@@ -1,0 +1,12 @@
+	8.	Vehicle crash with injuries
+Dispatcher: 911 what’s the location of your emergency
+Caller: Interstate 95 southbound, mile marker 142—there’s a crash!
+Dispatcher: What happened?
+Caller: Two cars and an SUV. The SUV is on its side.
+Dispatcher: Any fire or smoke?
+Caller: No fire, but there’s leaking fluid.
+Dispatcher: How many people injured?
+Caller: At least two—one person is trapped in the SUV, I think.
+Dispatcher: Do not approach leaking fluids. Are you in a safe spot?
+Caller: Yes, pulled over on the shoulder with hazards on.
+Dispatcher: Help is being sent. Stay on the line and keep a safe distance.

@@ -1,0 +1,12 @@
+	2.	Burglary in progress
+Dispatcher: 911 what’s the location of your emergency
+Caller: 77 Meadowbrook Lane. Someone’s breaking into my neighbor’s house—maybe mine next!
+Dispatcher: Tell me what you see.
+Caller: A guy in a dark hoodie trying the back door with something like a crowbar.
+Dispatcher: Is he inside yet?
+Caller: Not yet—he just forced the door open!
+Dispatcher: Are you in a safe place?
+Caller: I’m inside with my doors locked.
+Dispatcher: Good. Do not go outside. Can you describe him further?
+Caller: Medium build, about 6 feet, dark hoodie, jeans, white sneakers.
+Dispatcher: Officers are being dispatched now. Stay where you are.

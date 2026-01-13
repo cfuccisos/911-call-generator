@@ -12,6 +12,9 @@ $(document).ready(function() {
     // Load available voices on page load
     loadVoices();
 
+    // Load pre-loaded scripts on page load
+    loadScripts();
+
     // Load history on page load
     loadHistory();
 
@@ -47,6 +50,20 @@ $(document).ready(function() {
             $('#noiseLevelSection').hide();
         } else {
             $('#noiseLevelSection').show();
+        }
+    });
+
+    // Script source toggle handler
+    $('input[name="scriptSource"]').on('change', function() {
+        const source = $(this).val();
+        if (source === 'preloaded') {
+            $('#preloadedScriptSection').show();
+            $('#customPromptSection').hide();
+            $('#prompt').prop('required', false);
+        } else {
+            $('#preloadedScriptSection').hide();
+            $('#customPromptSection').show();
+            $('#prompt').prop('required', true);
         }
     });
 
@@ -117,13 +134,18 @@ $(document).ready(function() {
         $('#errorSection').addClass('d-none');
 
         // Show loading
-        showLoading('Generating dialogue...');
+        const usePreloadedCheck = $('input[name="scriptSource"]:checked').val() === 'preloaded';
+        const initialMessage = usePreloadedCheck ? 'Loading script...' : 'Generating dialogue...';
+        showLoading(initialMessage);
 
         // Disable form
         disableForm();
 
         // Get form data
+        const usePreloaded = $('input[name="scriptSource"]:checked').val() === 'preloaded';
         const formData = {
+            use_preloaded: usePreloaded ? 'true' : 'false',
+            script_filename: usePreloaded ? $('#scriptSelector').val() : '',
             prompt: $('#prompt').val().trim(),
             call_type: $('#callType').val(),
             dispatcher_protocol_questions: $('#dispatcherProtocolQuestions').val().trim(),
@@ -434,6 +456,44 @@ function showVoiceLoadError() {
     $('#dispatcherVoice').html(errorOption);
     $('#callerVoice').html(errorOption);
     $('#nurseVoice').html(errorOption);
+}
+
+/**
+ * Load pre-loaded scripts from server
+ */
+function loadScripts() {
+    console.log('Loading pre-loaded scripts...');
+
+    $.ajax({
+        url: '/api/scripts',
+        method: 'GET',
+        success: function(scripts) {
+            console.log('Scripts loaded:', scripts);
+
+            const scriptSelector = $('#scriptSelector');
+            scriptSelector.empty();
+
+            if (scripts && scripts.length > 0) {
+                scriptSelector.append('<option value="">Select a script...</option>');
+
+                scripts.forEach(function(script) {
+                    const option = $('<option></option>')
+                        .attr('value', script.filename)
+                        .text(script.title)
+                        .attr('title', script.description);
+                    scriptSelector.append(option);
+                });
+
+                console.log('Script dropdown populated with ' + scripts.length + ' scripts');
+            } else {
+                scriptSelector.append('<option value="">No scripts available</option>');
+            }
+        },
+        error: function(xhr) {
+            console.error('Error loading scripts:', xhr);
+            $('#scriptSelector').html('<option value="">Error loading scripts</option>');
+        }
+    });
 }
 
 /**

@@ -56,8 +56,43 @@
                         </div>
                     </div>
 
-                    <!-- Prompt Input -->
+                    <!-- Script Source Toggle -->
                     <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-file-text"></i>
+                            Script Source
+                        </label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="scriptSource" id="scriptSourceCustom" value="custom" checked>
+                            <label class="btn btn-outline-primary" for="scriptSourceCustom">
+                                <i class="bi bi-magic"></i>
+                                Generate with AI
+                            </label>
+
+                            <input type="radio" class="btn-check" name="scriptSource" id="scriptSourcePreloaded" value="preloaded">
+                            <label class="btn btn-outline-primary" for="scriptSourcePreloaded">
+                                <i class="bi bi-file-earmark-text"></i>
+                                Use Pre-loaded Script
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Pre-loaded Script Selector (Hidden by default) -->
+                    <div class="mb-4" id="preloadedScriptSection" style="display: none;">
+                        <label for="scriptSelector" class="form-label fw-bold">
+                            <i class="bi bi-collection"></i>
+                            Select Script
+                        </label>
+                        <select class="form-select" id="scriptSelector" name="script_filename">
+                            <option value="">Loading scripts...</option>
+                        </select>
+                        <div class="form-text">
+                            Choose from pre-made 911 call scenarios
+                        </div>
+                    </div>
+
+                    <!-- Prompt Input -->
+                    <div class="mb-4" id="customPromptSection">
                         <label for="prompt" class="form-label fw-bold">
                             <i class="bi bi-pencil-square"></i>
                             <span id="promptLabel">Emergency Scenario Description</span>
@@ -69,7 +104,6 @@
                             rows="4"
                             maxlength="500"
                             placeholder="Describe the emergency scenario... (e.g., 'Car accident on Highway 101 with multiple injuries')"
-                            required
                         ></textarea>
                         <div class="form-text">
                             <span id="charCount">0</span>/500 characters

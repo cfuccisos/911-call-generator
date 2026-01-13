@@ -11,7 +11,9 @@ from services.elevenlabs_service import ElevenLabsService
 from services.audio_processor import AudioProcessor
 from utils.validators import validate_prompt, validate_audio_format
 from utils.file_manager import FileManager
+from utils.script_loader import ScriptLoader
 import logging
+import os
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -37,12 +39,29 @@ gemini = GeminiService(app.config['GEMINI_API_KEY'])
 elevenlabs = ElevenLabsService(app.config['ELEVENLABS_API_KEY'])
 audio_processor = AudioProcessor()
 file_manager = FileManager(app.config['AUDIO_OUTPUT_DIR'])
+script_loader = ScriptLoader(os.path.join(os.path.dirname(__file__), 'sample_scripts'))
 
 
 @app.route('/')
 def index():
     """Render the main page with the form."""
     return render_template('index.html')
+
+
+@app.route('/api/scripts', methods=['GET'])
+def list_scripts():
+    """
+    List all available pre-loaded scripts.
+
+    Returns:
+        JSON array of scripts with filename, title, and description
+    """
+    try:
+        scripts = script_loader.list_available_scripts()
+        return jsonify(scripts)
+    except Exception as e:
+        logger.error(f"Error listing scripts: {e}")
+        return jsonify({"error": "Failed to load scripts"}), 500
 
 
 @app.route('/generate', methods=['POST'])
@@ -61,6 +80,8 @@ def generate():
     try:
         # 1. Get and validate input
         prompt = request.form.get('prompt', '').strip()
+        script_filename = request.form.get('script_filename', '').strip()
+        use_preloaded = request.form.get('use_preloaded', 'false').lower() == 'true'
         call_type = request.form.get('call_type', 'emergency').strip()
         dispatcher_protocol_questions = request.form.get('dispatcher_protocol_questions', '').strip()
         nurse_protocol_questions = request.form.get('nurse_protocol_questions', '').strip()
@@ -86,13 +107,17 @@ def generate():
         if nurse_protocol_questions:
             logger.info(f"Nurse protocol questions: {nurse_protocol_questions[:100]}...")
 
-        # Validate prompt
-        is_valid, error_msg = validate_prompt(
-            prompt,
-            max_length=app.config['MAX_PROMPT_LENGTH']
-        )
-        if not is_valid:
-            return jsonify({"error": error_msg}), 400
+        # Validate prompt (only if not using pre-loaded script)
+        if use_preloaded:
+            if not script_filename:
+                return jsonify({"error": "Script filename required when using pre-loaded script"}), 400
+        else:
+            is_valid, error_msg = validate_prompt(
+                prompt,
+                max_length=app.config['MAX_PROMPT_LENGTH']
+            )
+            if not is_valid:
+                return jsonify({"error": error_msg}), 400
 
         # Validate audio format
         if not validate_audio_format(
@@ -127,22 +152,31 @@ def generate():
         if nurse_info:
             logger.info(f"Nurse voice: {nurse_info['name']} ({nurse_info['gender']})")
 
-        # 2. Generate dialogue with Gemini
-        logger.info("Step 1: Generating dialogue...")
-        dialogue_data = gemini.generate_dialogue(
-            prompt,
-            call_duration,
-            emotion_level,
-            dispatcher_info['gender'],
-            caller_info['gender'],
-            dispatcher_protocol_questions,
-            call_type,
-            nurse_protocol_questions,
-            nurse_info['gender'] if nurse_info else 'unknown',
-            erratic_level
-        )
-        dialogue = dialogue_data['dialogue']
-        metadata = dialogue_data.get('metadata', {})
+        # 2. Generate or load dialogue
+        if use_preloaded:
+            logger.info(f"Step 1: Loading pre-loaded script: {script_filename}")
+            dialogue_data = script_loader.load_script(script_filename)
+            if not dialogue_data:
+                return jsonify({"error": "Failed to load script file"}), 500
+            dialogue = dialogue_data['dialogue']
+            metadata = dialogue_data.get('metadata', {})
+            logger.info(f"Loaded script with {len(dialogue)} dialogue lines")
+        else:
+            logger.info("Step 1: Generating dialogue with Gemini...")
+            dialogue_data = gemini.generate_dialogue(
+                prompt,
+                call_duration,
+                emotion_level,
+                dispatcher_info['gender'],
+                caller_info['gender'],
+                dispatcher_protocol_questions,
+                call_type,
+                nurse_protocol_questions,
+                nurse_info['gender'] if nurse_info else 'unknown',
+                erratic_level
+            )
+            dialogue = dialogue_data['dialogue']
+            metadata = dialogue_data.get('metadata', {})
 
         logger.info(f"Generated {len(dialogue)} dialogue exchanges")
 

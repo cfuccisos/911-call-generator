@@ -1,0 +1,10 @@
+	18.	Noise complaint / non-emergency type call
+Dispatcher: 911 what’s the location of your emergency
+Caller: 19 Brookfield Court. I’m sorry—this isn’t a life-or-death thing.
+Dispatcher: Tell me what’s going on.
+Caller: The house next door has loud music and yelling again. It’s been hours.
+Dispatcher: Any threats, fighting, or weapons?
+Caller: No, just blasting music and people shouting.
+Dispatcher: Understood. Officers can check it out. Do you want to remain anonymous to the neighbors?
+Caller: Yes, please.
+Dispatcher: Okay. Stay inside and call back if it escalates.

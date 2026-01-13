@@ -1,0 +1,10 @@
+	20.	Civil standby / keep the peace
+Dispatcher: 911 what’s the location of your emergency
+Caller: 1010 Crestview Drive. I need an officer to be here while I pick up my things.
+Dispatcher: Tell me more about the situation.
+Caller: I’m leaving my ex’s house. He’s not supposed to contact me, but I need my clothes and paperwork.
+Dispatcher: Is he there right now?
+Caller: He is, and I’m worried he’ll start yelling.
+Dispatcher: Any weapons known at the address?
+Caller: He owns a rifle, but it’s usually locked up.
+Dispatcher: Understood. Officers can do a standby. Stay in your vehicle outside until they arrive.

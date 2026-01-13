@@ -1,0 +1,10 @@
+	17.	Seizure (medical)
+Dispatcher: 911 what’s the location of your emergency
+Caller: 2500 North Park, near the playground.
+Dispatcher: What’s happening?
+Caller: A man just fell and he’s shaking—like a seizure.
+Dispatcher: Is he on the ground?
+Caller: Yes.
+Dispatcher: Don’t restrain him. Clear objects away and turn him on his side when safe. Is he breathing?
+Caller: I think so—yes.
+Dispatcher: Good. Tell me how long it lasts. EMS is on the way.

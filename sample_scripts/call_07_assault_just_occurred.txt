@@ -1,0 +1,12 @@
+	7.	Assault just occurred
+Dispatcher: 911 what’s the location of your emergency
+Caller: Corner of 8th and Jefferson, outside the bar.
+Dispatcher: Tell me what happened.
+Caller: A man punched another guy and ran off. The victim is on the sidewalk bleeding.
+Dispatcher: Is the suspect still nearby?
+Caller: He ran east down Jefferson toward the parking lot.
+Dispatcher: Can you describe him?
+Caller: White male, shaved head, black T-shirt, jeans—maybe 30s.
+Dispatcher: How badly is the victim hurt?
+Caller: He’s conscious but his nose is bleeding a lot.
+Dispatcher: EMS and police are on the way. Don’t move him unless necessary for safety.

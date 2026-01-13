@@ -1,0 +1,10 @@
+	16.	Allergic reaction / anaphylaxis
+Dispatcher: 911 what’s the location of your emergency
+Caller: 88 Garden View Lane. My daughter got stung and she can’t breathe well.
+Dispatcher: How old is she?
+Caller: 14.
+Dispatcher: Is she wheezing or swelling in the face/lips?
+Caller: Yes—her lips are swelling.
+Dispatcher: Do you have an EpiPen?
+Caller: Yes, we do.
+Dispatcher: Use it now per the label. EMS is on the way—tell me once it’s given.

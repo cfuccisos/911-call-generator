@@ -1,0 +1,10 @@
+	10.	DUI / erratic driver
+Dispatcher: 911 what’s the location of your emergency
+Caller: I’m behind a car on Main Street near the courthouse—it’s all over the road.
+Dispatcher: What’s the vehicle description?
+Caller: White SUV, possibly a Jeep, plate looks like “HNF 204.”
+Dispatcher: What is it doing?
+Caller: Swerving into oncoming lane, braking randomly.
+Dispatcher: Are you able to keep a safe distance?
+Caller: Yes.
+Dispatcher: Do not try to stop them. Officers are being notified—keep following at a safe distance and tell me turns.

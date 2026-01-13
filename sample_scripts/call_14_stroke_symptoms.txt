@@ -1,0 +1,10 @@
+	14.	Stroke symptoms
+Dispatcher: 911 what’s the location of your emergency
+Caller: 404 Sunset Drive. My mom is acting strange.
+Dispatcher: Tell me what you’re seeing.
+Caller: Her face is drooping on one side and her speech is slurred.
+Dispatcher: When did this start?
+Caller: Just now—maybe 5 minutes ago.
+Dispatcher: Can she raise both arms?
+Caller: One arm keeps dropping.
+Dispatcher: This could be a stroke. EMS is being dispatched now. Note the time symptoms started—stay on the line.

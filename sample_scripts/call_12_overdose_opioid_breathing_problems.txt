@@ -1,0 +1,12 @@
+	12.	Overdose (opioid) / breathing problems
+Dispatcher: 911 what’s the location of your emergency
+Caller: 901 South 3rd Street, in the alley behind the apartments.
+Dispatcher: What’s the problem?
+Caller: A man is slumped over. He’s barely breathing.
+Dispatcher: Is he awake?
+Caller: No. I shook him and he didn’t respond.
+Dispatcher: Are his lips turning blue or gray?
+Caller: Yes, kind of blue.
+Dispatcher: Do you have naloxone/Narcan available?
+Caller: I do—I have a kit.
+Dispatcher: I’ll guide you. While I stay on the line, start giving it per the instructions and tell me when it’s administered.

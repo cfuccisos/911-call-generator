@@ -1,0 +1,12 @@
+	9.	Hit-and-run
+Dispatcher: 911 what’s the location of your emergency
+Caller: 300 block of Lakeshore Avenue.
+Dispatcher: What’s going on?
+Caller: A car just hit a parked vehicle and sped off.
+Dispatcher: Did anyone get hurt?
+Caller: No injuries that I saw, but it crushed the bumper.
+Dispatcher: Can you describe the fleeing vehicle?
+Caller: Blue sedan, maybe a Toyota, left taillight broken. Partial plate: 7KX—something.
+Dispatcher: Which direction did it go?
+Caller: North on Lakeshore toward the bridge.
+Dispatcher: Officers will check the area. Please remain available for a statement.
