@@ -58,7 +58,8 @@ class ElevenLabsService:
         text: str,
         voice_id: str,
         stability: float = 0.5,
-        clarity: float = 0.75
+        clarity: float = 0.75,
+        language: str = 'en'
     ) -> bytes:
         """
         Convert text to speech using ElevenLabs.
@@ -81,11 +82,15 @@ class ElevenLabsService:
             # Preprocess text to fix pronunciation issues
             processed_text = self._preprocess_text(text)
 
+            # Select model based on language
+            # Use multilingual model for non-English languages
+            model_id = "eleven_multilingual_v2" if language != 'en' else "eleven_monolingual_v1"
+
             # For version 0.2.27, use simpler API call
             audio = generate(
                 text=processed_text,
                 voice=voice_id,
-                model="eleven_monolingual_v1"
+                model=model_id
             )
 
             return audio
@@ -94,13 +99,14 @@ class ElevenLabsService:
             self.logger.error(f"ElevenLabs API error: {str(e)}")
             raise Exception(f"Failed to generate speech: {str(e)}")
 
-    def generate_dispatcher_audio(self, text: str, voice_id: str) -> bytes:
+    def generate_dispatcher_audio(self, text: str, voice_id: str, language: str = 'en') -> bytes:
         """
         Generate audio for dispatcher with professional voice settings.
 
         Args:
             text: Dispatcher's text
             voice_id: Voice ID for dispatcher
+            language: Language code (e.g., 'en', 'es', 'fr')
 
         Returns:
             Audio bytes
@@ -110,10 +116,11 @@ class ElevenLabsService:
             text=text,
             voice_id=voice_id,
             stability=0.7,
-            clarity=0.75
+            clarity=0.75,
+            language=language
         )
 
-    def generate_caller_audio(self, text: str, voice_id: str, emotion_level: str = 'concerned') -> bytes:
+    def generate_caller_audio(self, text: str, voice_id: str, emotion_level: str = 'concerned', language: str = 'en') -> bytes:
         """
         Generate audio for caller with emotional voice settings based on emotion level.
 
@@ -121,6 +128,7 @@ class ElevenLabsService:
             text: Caller's text
             voice_id: Voice ID for caller
             emotion_level: Emotion level (calm, concerned, anxious, panicked, hysterical)
+            language: Language code (e.g., 'en', 'es', 'fr')
 
         Returns:
             Audio bytes
@@ -140,16 +148,18 @@ class ElevenLabsService:
             text=text,
             voice_id=voice_id,
             stability=stability,
-            clarity=0.75
+            clarity=0.75,
+            language=language
         )
 
-    def generate_nurse_audio(self, text: str, voice_id: str) -> bytes:
+    def generate_nurse_audio(self, text: str, voice_id: str, language: str = 'en') -> bytes:
         """
         Generate audio for nurse with calm, professional voice settings.
 
         Args:
             text: Nurse's text
             voice_id: Voice ID for nurse
+            language: Language code (e.g., 'en', 'es', 'fr')
 
         Returns:
             Audio bytes
@@ -159,7 +169,8 @@ class ElevenLabsService:
             text=text,
             voice_id=voice_id,
             stability=0.6,
-            clarity=0.75
+            clarity=0.75,
+            language=language
         )
 
     def get_voice_info(self, voice_id: str) -> dict:

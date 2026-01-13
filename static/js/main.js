@@ -148,6 +148,7 @@ $(document).ready(function() {
             script_filename: usePreloaded ? $('#scriptSelector').val() : '',
             prompt: $('#prompt').val().trim(),
             call_type: $('#callType').val(),
+            language: $('#language').val(),
             dispatcher_protocol_questions: $('#dispatcherProtocolQuestions').val().trim(),
             nurse_protocol_questions: $('#nurseProtocolQuestions').val().trim(),
             call_duration: $('#callDuration').val(),

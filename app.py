@@ -83,6 +83,7 @@ def generate():
         script_filename = request.form.get('script_filename', '').strip()
         use_preloaded = request.form.get('use_preloaded', 'false').lower() == 'true'
         call_type = request.form.get('call_type', 'emergency').strip()
+        language = request.form.get('language', 'en').strip()
         dispatcher_protocol_questions = request.form.get('dispatcher_protocol_questions', '').strip()
         nurse_protocol_questions = request.form.get('nurse_protocol_questions', '').strip()
         call_duration_str = request.form.get('call_duration', '60').strip()
@@ -98,7 +99,7 @@ def generate():
         caller_voice_id = request.form.get('caller_voice_id', '').strip()
         nurse_voice_id = request.form.get('nurse_voice_id', '').strip()
 
-        logger.info(f"Generate request: type={call_type}, format={audio_format}, quality={audio_quality}, noise={background_noise_type}/{background_noise_level}, diarized={diarized}, duration={call_duration}s, emotion={emotion_level}, erratic={erratic_level}")
+        logger.info(f"Generate request: type={call_type}, language={language}, format={audio_format}, quality={audio_quality}, noise={background_noise_type}/{background_noise_level}, diarized={diarized}, duration={call_duration}s, emotion={emotion_level}, erratic={erratic_level}")
         logger.info(f"Voices: dispatcher={dispatcher_voice_id[:20]}..., caller={caller_voice_id[:20]}..." +
                    (f", nurse={nurse_voice_id[:20]}..." if nurse_voice_id else ""))
         logger.info(f"Prompt: {prompt[:100]}...")
@@ -173,7 +174,8 @@ def generate():
                 call_type,
                 nurse_protocol_questions,
                 nurse_info['gender'] if nurse_info else 'unknown',
-                erratic_level
+                erratic_level,
+                language
             )
             dialogue = dialogue_data['dialogue']
             metadata = dialogue_data.get('metadata', {})
@@ -189,18 +191,21 @@ def generate():
             if item['speaker'] == 'dispatcher':
                 audio_bytes = elevenlabs.generate_dispatcher_audio(
                     item['text'],
-                    dispatcher_voice_id
+                    dispatcher_voice_id,
+                    language
                 )
             elif item['speaker'] == 'nurse':
                 audio_bytes = elevenlabs.generate_nurse_audio(
                     item['text'],
-                    nurse_voice_id
+                    nurse_voice_id,
+                    language
                 )
             else:  # caller
                 audio_bytes = elevenlabs.generate_caller_audio(
                     item['text'],
                     caller_voice_id,
-                    emotion_level
+                    emotion_level,
+                    language
                 )
 
             audio_segments.append(audio_bytes)

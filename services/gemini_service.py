@@ -30,7 +30,8 @@ class GeminiService:
         call_type: str = 'emergency',
         nurse_protocol_questions: str = '',
         nurse_gender: str = 'unknown',
-        erratic_level: str = 'none'
+        erratic_level: str = 'none',
+        language: str = 'en'
     ) -> dict:
         """
         Generate 911 call dialogue based on scenario.
@@ -64,7 +65,7 @@ class GeminiService:
         Raises:
             ValueError: If dialogue generation or parsing fails
         """
-        prompt = self._build_prompt(scenario, target_duration, emotion_level, dispatcher_gender, caller_gender, dispatcher_protocol_questions, call_type, nurse_protocol_questions, nurse_gender, erratic_level)
+        prompt = self._build_prompt(scenario, target_duration, emotion_level, dispatcher_gender, caller_gender, dispatcher_protocol_questions, call_type, nurse_protocol_questions, nurse_gender, erratic_level, language)
 
         try:
             protocol_msg = ""
@@ -93,7 +94,8 @@ class GeminiService:
         call_type: str = 'emergency',
         nurse_protocol_questions: str = '',
         nurse_gender: str = 'unknown',
-        erratic_level: str = 'none'
+        erratic_level: str = 'none',
+        language: str = 'en'
     ) -> str:
         """
         Build prompt for Gemini to generate realistic 911 dialogue.
@@ -163,6 +165,24 @@ class GeminiService:
         if nurse_gender in ['male', 'female']:
             nurse_desc = f" The nurse is {nurse_gender}."
 
+        # Map language code to full name
+        language_names = {
+            'en': 'English',
+            'es': 'Spanish',
+            'fr': 'French',
+            'de': 'German',
+            'it': 'Italian',
+            'pt': 'Portuguese',
+            'pl': 'Polish',
+            'hi': 'Hindi',
+            'ja': 'Japanese',
+            'ko': 'Korean',
+            'zh': 'Chinese (Mandarin)',
+            'ar': 'Arabic'
+        }
+        language_name = language_names.get(language, 'English')
+        language_instruction = f"\n\nCRITICAL - Language Requirement:\nYou MUST generate ALL dialogue in {language_name}. Every line spoken by the dispatcher, caller, and nurse must be in {language_name}. Use natural, native {language_name} phrasing appropriate for emergency services." if language != 'en' else ""
+
         # Build protocol questions sections if provided
         dispatcher_protocol_section = ""
         if dispatcher_protocol_questions:
@@ -192,7 +212,7 @@ Generate a dialogue where a 911 dispatcher transfers a caller to a nurse for med
 2. Nurse (asks clarifying questions)
 3. Caller (describes medical condition)
 
-Scenario: {scenario}{dispatcher_protocol_section}{nurse_protocol_section}{erratic_note}
+Scenario: {scenario}{dispatcher_protocol_section}{nurse_protocol_section}{erratic_note}{language_instruction}
 
 Requirements:
 1. Start with dispatcher explaining situation to nurse (2-3 exchanges)
@@ -242,7 +262,7 @@ Important:
             return f"""You are an expert in creating realistic 911 dispatcher-to-dispatcher transfer scenarios for training purposes.
 
 Generate a dialogue where one dispatcher is transferring a call/incident to another dispatcher (or supervisor/specialist) based on this scenario:
-{scenario}{dispatcher_protocol_section}
+{scenario}{dispatcher_protocol_section}{language_instruction}
 
 Requirements:
 1. Speaker 1 (transferring dispatcher) should be professional and provide key information{dispatcher_desc}
@@ -282,7 +302,7 @@ Important:
             return f"""You are an expert in creating realistic 911 emergency call scenarios for training purposes.
 
 Generate a dialogue between a 911 dispatcher and a caller based on this scenario:
-{scenario}{dispatcher_protocol_section}{erratic_note}
+{scenario}{dispatcher_protocol_section}{erratic_note}{language_instruction}
 
 Requirements:
 1. The dispatcher should be professional, calm, and ask relevant questions{dispatcher_desc}
