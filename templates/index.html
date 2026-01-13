@@ -19,19 +19,40 @@
             <div class="card-body p-4">
                 <!-- Form -->
                 <form id="generateForm">
-                    <!-- Call Type Selection -->
-                    <div class="mb-3">
-                        <label for="callType" class="form-label fw-bold">
-                            <i class="bi bi-telephone"></i>
-                            Call Type
-                        </label>
-                        <select class="form-select" id="callType" name="call_type">
-                            <option value="emergency" selected>Emergency Call (Dispatcher ↔ Caller)</option>
-                            <option value="transfer">Dispatcher Transfer (Dispatcher ↔ Dispatcher)</option>
-                            <option value="warm_transfer">Warm Transfer to Nurse (Dispatcher → Nurse → Caller)</option>
-                        </select>
-                        <div class="form-text">
-                            Type of 911 call to generate
+                    <!-- Call Type & Duration (Side by Side) -->
+                    <div class="row mb-3">
+                        <!-- Call Type Selection -->
+                        <div class="col-md-6">
+                            <label for="callType" class="form-label fw-bold">
+                                <i class="bi bi-telephone"></i>
+                                Call Type
+                            </label>
+                            <select class="form-select" id="callType" name="call_type">
+                                <option value="emergency" selected>Emergency Call</option>
+                                <option value="transfer">Dispatcher Transfer</option>
+                                <option value="warm_transfer">Warm Transfer to Nurse</option>
+                            </select>
+                            <div class="form-text">
+                                Type of 911 call
+                            </div>
+                        </div>
+
+                        <!-- Call Duration Selection -->
+                        <div class="col-md-6">
+                            <label for="callDuration" class="form-label fw-bold">
+                                <i class="bi bi-clock"></i>
+                                Target Call Duration
+                            </label>
+                            <select class="form-select" id="callDuration" name="call_duration">
+                                <option value="30">30 seconds</option>
+                                <option value="60" selected>1 minute</option>
+                                <option value="90">1.5 minutes</option>
+                                <option value="120">2 minutes</option>
+                                <option value="180">3 minutes</option>
+                            </select>
+                            <div class="form-text">
+                                Target call length
+                            </div>
                         </div>
                     </div>
 
@@ -110,41 +131,44 @@
                         </div>
                     </div>
 
-                    <!-- First Speaker Voice Selection -->
-                    <div class="mb-3">
-                        <label for="dispatcherVoice" class="form-label fw-bold">
-                            <i class="bi bi-person-badge"></i>
-                            <span id="voice1Label">Dispatcher Voice</span>
-                        </label>
-                        <div class="input-group">
-                            <select class="form-select" id="dispatcherVoice" name="dispatcher_voice_id" required>
-                                <option value="">Loading voices...</option>
-                            </select>
-                            <button class="btn btn-outline-secondary" type="button" id="previewDispatcher" disabled>
-                                <i class="bi bi-volume-up"></i> Preview
-                            </button>
+                    <!-- Voice Selection (Side by Side) -->
+                    <div class="row mb-3">
+                        <!-- First Speaker Voice Selection -->
+                        <div class="col-md-6">
+                            <label for="dispatcherVoice" class="form-label fw-bold">
+                                <i class="bi bi-person-badge"></i>
+                                <span id="voice1Label">Dispatcher Voice</span>
+                            </label>
+                            <div class="input-group">
+                                <select class="form-select" id="dispatcherVoice" name="dispatcher_voice_id" required>
+                                    <option value="">Loading voices...</option>
+                                </select>
+                                <button class="btn btn-outline-secondary" type="button" id="previewDispatcher" disabled>
+                                    <i class="bi bi-volume-up"></i>
+                                </button>
+                            </div>
+                            <div class="form-text" id="voice1Help">
+                                Professional, calm voice
+                            </div>
                         </div>
-                        <div class="form-text" id="voice1Help">
-                            Professional, calm voice for the 911 dispatcher
-                        </div>
-                    </div>
 
-                    <!-- Second Speaker Voice Selection -->
-                    <div class="mb-3">
-                        <label for="callerVoice" class="form-label fw-bold">
-                            <i class="bi bi-person-fill"></i>
-                            <span id="voice2Label">Caller Voice</span>
-                        </label>
-                        <div class="input-group">
-                            <select class="form-select" id="callerVoice" name="caller_voice_id" required>
-                                <option value="">Loading voices...</option>
-                            </select>
-                            <button class="btn btn-outline-secondary" type="button" id="previewCaller" disabled>
-                                <i class="bi bi-volume-up"></i> Preview
-                            </button>
-                        </div>
-                        <div class="form-text" id="voice2Help">
-                            Emotional, varied voice for the emergency caller
+                        <!-- Second Speaker Voice Selection -->
+                        <div class="col-md-6">
+                            <label for="callerVoice" class="form-label fw-bold">
+                                <i class="bi bi-person-fill"></i>
+                                <span id="voice2Label">Caller Voice</span>
+                            </label>
+                            <div class="input-group">
+                                <select class="form-select" id="callerVoice" name="caller_voice_id" required>
+                                    <option value="">Loading voices...</option>
+                                </select>
+                                <button class="btn btn-outline-secondary" type="button" id="previewCaller" disabled>
+                                    <i class="bi bi-volume-up"></i>
+                                </button>
+                            </div>
+                            <div class="form-text" id="voice2Help">
+                                Emotional, varied voice
+                            </div>
                         </div>
                     </div>
 
@@ -167,70 +191,118 @@
                         </div>
                     </div>
 
-                    <!-- Call Duration Selection -->
-                    <div class="mb-3">
-                        <label for="callDuration" class="form-label fw-bold">
-                            <i class="bi bi-clock"></i>
-                            Target Call Duration
-                        </label>
-                        <select class="form-select" id="callDuration" name="call_duration">
-                            <option value="30">30 seconds (Quick)</option>
-                            <option value="60" selected>1 minute (Standard)</option>
-                            <option value="90">1.5 minutes (Detailed)</option>
-                            <option value="120">2 minutes (Extended)</option>
-                            <option value="180">3 minutes (Comprehensive)</option>
-                        </select>
-                        <div class="form-text">
-                            Approximate length of the generated call
+                    <!-- Caller Emotion & Erratic Behavior (Side by Side) -->
+                    <div class="row mb-3">
+                        <!-- Caller Emotion Level (Emergency Calls Only) -->
+                        <div class="col-md-6" id="emotionLevelSection">
+                            <label for="emotionLevel" class="form-label fw-bold">
+                                <i class="bi bi-emoji-frown"></i>
+                                Caller Emotion Level
+                            </label>
+                            <select class="form-select" id="emotionLevel" name="emotion_level">
+                                <option value="calm">Calm - Composed and clear</option>
+                                <option value="concerned" selected>Concerned - Worried but coherent</option>
+                                <option value="anxious">Anxious - Nervous and stressed</option>
+                                <option value="panicked">Panicked - Very distressed</option>
+                                <option value="hysterical">Hysterical - Extremely emotional</option>
+                            </select>
+                            <div class="form-text">
+                                How emotional/distressed the caller sounds
+                            </div>
+                        </div>
+
+                        <!-- Caller Erratic Behavior Level (Emergency & Warm Transfer Calls Only) -->
+                        <div class="col-md-6" id="erraticLevelSection">
+                            <label for="erraticLevel" class="form-label fw-bold">
+                                <i class="bi bi-lightning"></i>
+                                Caller Erratic Behavior Level
+                            </label>
+                            <select class="form-select" id="erraticLevel" name="erratic_level">
+                                <option value="none" selected>None - Focused and coherent</option>
+                                <option value="slight">Slight - Minor rambling or tangents</option>
+                                <option value="moderate">Moderate - Some difficulty staying on topic</option>
+                                <option value="high">High - Frequent interruptions and tangents</option>
+                                <option value="extreme">Extreme - Very difficult to manage, highly incoherent</option>
+                            </select>
+                            <div class="form-text">
+                                How erratic/difficult the caller is (rambling, interrupting, going off-topic)
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Caller Emotion Level Selection (Emergency Calls Only) -->
-                    <div class="mb-3" id="emotionLevelSection">
-                        <label for="emotionLevel" class="form-label fw-bold">
-                            <i class="bi bi-emoji-frown"></i>
-                            Caller Emotion Level
-                        </label>
-                        <select class="form-select" id="emotionLevel" name="emotion_level">
-                            <option value="calm">Calm - Composed and clear</option>
-                            <option value="concerned" selected>Concerned - Worried but coherent</option>
-                            <option value="anxious">Anxious - Nervous and stressed</option>
-                            <option value="panicked">Panicked - Very distressed</option>
-                            <option value="hysterical">Hysterical - Extremely emotional</option>
-                        </select>
-                        <div class="form-text">
-                            How emotional/distressed the caller sounds
+                    <!-- Audio Format & Quality (Side by Side) -->
+                    <div class="row mb-3">
+                        <!-- Audio Format Selection -->
+                        <div class="col-md-6">
+                            <label for="audioFormat" class="form-label fw-bold">
+                                <i class="bi bi-file-earmark-music"></i>
+                                Audio Format
+                            </label>
+                            <select class="form-select" id="audioFormat" name="audio_format">
+                                <option value="mp3" selected>MP3 (Compressed)</option>
+                                <option value="wav">WAV (Uncompressed)</option>
+                            </select>
+                            <div class="form-text">
+                                File format for export
+                            </div>
+                        </div>
+
+                        <!-- Audio Quality Selection -->
+                        <div class="col-md-6">
+                            <label for="audioQuality" class="form-label fw-bold">
+                                <i class="bi bi-soundwave"></i>
+                                Audio Quality
+                            </label>
+                            <select class="form-select" id="audioQuality" name="audio_quality">
+                                <option value="high" selected>High - Best quality</option>
+                                <option value="medium">Medium - Standard</option>
+                                <option value="low">Low - Phone quality</option>
+                                <option value="very_low">Very Low - Poor connection</option>
+                            </select>
+                            <div class="form-text">
+                                Simulates connection quality
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Caller Erratic Behavior Level (Emergency & Warm Transfer Calls Only) -->
-                    <div class="mb-3" id="erraticLevelSection">
-                        <label for="erraticLevel" class="form-label fw-bold">
-                            <i class="bi bi-lightning"></i>
-                            Caller Erratic Behavior Level
-                        </label>
-                        <select class="form-select" id="erraticLevel" name="erratic_level">
-                            <option value="none" selected>None - Focused and coherent</option>
-                            <option value="slight">Slight - Minor rambling or tangents</option>
-                            <option value="moderate">Moderate - Some difficulty staying on topic</option>
-                            <option value="high">High - Frequent interruptions and tangents</option>
-                            <option value="extreme">Extreme - Very difficult to manage, highly incoherent</option>
-                        </select>
-                        <div class="form-text">
-                            How erratic/difficult the caller is (rambling, interrupting, going off-topic)
+                    <!-- Background Noise Type & Level (Side by Side) -->
+                    <div class="row mb-3">
+                        <!-- Background Noise Type Selection -->
+                        <div class="col-md-6">
+                            <label for="backgroundNoiseType" class="form-label fw-bold">
+                                <i class="bi bi-broadcast-pin"></i>
+                                Background Noise Type
+                            </label>
+                            <select class="form-select" id="backgroundNoiseType" name="background_noise_type">
+                                <option value="none" selected>None - Clean audio</option>
+                                <option value="static">Phone Static</option>
+                                <option value="dispatch">Dispatch Center</option>
+                                <option value="traffic">Traffic/Road</option>
+                                <option value="sirens">Emergency Sirens</option>
+                                <option value="crowd">Crowd/Public</option>
+                                <option value="wind">Wind/Outdoor</option>
+                            </select>
+                            <div class="form-text">
+                                Type of ambient noise
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Audio Format Selection -->
-                    <div class="mb-3">
-                        <label for="audioFormat" class="form-label fw-bold">
-                            <i class="bi bi-file-earmark-music"></i>
-                            Audio Format
-                        </label>
-                        <select class="form-select" id="audioFormat" name="audio_format">
-                            <option value="mp3" selected>MP3 (Compressed)</option>
-                            <option value="wav">WAV (Uncompressed)</option>
-                        </select>
+                        <!-- Background Noise Level Selection -->
+                        <div class="col-md-6" id="noiseLevelSection" style="display: none;">
+                            <label for="backgroundNoiseLevel" class="form-label fw-bold">
+                                <i class="bi bi-volume-up"></i>
+                                Background Noise Level
+                            </label>
+                            <select class="form-select" id="backgroundNoiseLevel" name="background_noise_level">
+                                <option value="light">Light - Subtle</option>
+                                <option value="moderate" selected>Moderate - Noticeable</option>
+                                <option value="heavy">Heavy - Significant</option>
+                                <option value="extreme">Extreme - Very loud</option>
+                            </select>
+                            <div class="form-text">
+                                Volume level
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Diarization Option -->

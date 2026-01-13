@@ -40,6 +40,21 @@ $(document).ready(function() {
     // Initialize UI based on default call type
     updateUIForCallType($('#callType').val());
 
+    // Background noise type change handler
+    $('#backgroundNoiseType').on('change', function() {
+        const noiseType = $(this).val();
+        if (noiseType === 'none') {
+            $('#noiseLevelSection').hide();
+        } else {
+            $('#noiseLevelSection').show();
+        }
+    });
+
+    // Initialize noise level visibility
+    if ($('#backgroundNoiseType').val() !== 'none') {
+        $('#noiseLevelSection').show();
+    }
+
     // Preview button handlers
     $('#previewDispatcher').on('click', function() {
         const voiceId = $('#dispatcherVoice').val();
@@ -117,6 +132,9 @@ $(document).ready(function() {
             emotion_level: $('#emotionLevel').val(),
             erratic_level: $('#erraticLevel').val(),
             audio_format: $('#audioFormat').val(),
+            audio_quality: $('#audioQuality').val(),
+            background_noise_type: $('#backgroundNoiseType').val(),
+            background_noise_level: $('#backgroundNoiseLevel').val(),
             diarized: $('#diarized').is(':checked') ? 'true' : 'false',
             dispatcher_voice_id: $('#dispatcherVoice').val(),
             caller_voice_id: $('#callerVoice').val(),
@@ -201,6 +219,9 @@ function disableForm() {
     $('#callerVoice').prop('disabled', true);
     $('#nurseVoice').prop('disabled', true);
     $('#audioFormat').prop('disabled', true);
+    $('#audioQuality').prop('disabled', true);
+    $('#backgroundNoiseType').prop('disabled', true);
+    $('#backgroundNoiseLevel').prop('disabled', true);
     $('#diarized').prop('disabled', true);
     $('#previewDispatcher').prop('disabled', true);
     $('#previewCaller').prop('disabled', true);
@@ -225,6 +246,9 @@ function enableForm() {
     $('#callerVoice').prop('disabled', false);
     $('#nurseVoice').prop('disabled', false);
     $('#audioFormat').prop('disabled', false);
+    $('#audioQuality').prop('disabled', false);
+    $('#backgroundNoiseType').prop('disabled', false);
+    $('#backgroundNoiseLevel').prop('disabled', false);
     $('#diarized').prop('disabled', false);
     $('#previewDispatcher').prop('disabled', $('#dispatcherVoice').val() === '');
     $('#previewCaller').prop('disabled', $('#callerVoice').val() === '');
@@ -333,10 +357,33 @@ function populateVoiceDropdowns(voices) {
 
     // Add voice options
     voices.forEach(function(voice) {
-        const optionText = voice.name + (voice.description ? ' - ' + voice.description.substring(0, 40) : '');
+        // Extract name and first part of description for compact display
+        const nameParts = voice.name.split(' - ');
+        const voiceName = nameParts[0];
+
+        // Get first 2 descriptors if available (e.g., "Laid-Back, Casual" from "Laid-Back, Casual, Resonant")
+        let shortDesc = '';
+        if (nameParts.length > 1 && nameParts[1].trim()) {
+            const descriptors = nameParts[1].split(',').map(d => d.trim());
+            shortDesc = ' - ' + descriptors.slice(0, 2).join(', ');
+        } else if (voice.description) {
+            // If no dash descriptor but has a description field, use first 30 chars
+            shortDesc = ' - ' + voice.description.substring(0, 30);
+            if (voice.description.length > 30) shortDesc += '...';
+        }
+
+        const displayText = voiceName + shortDesc;
+
+        // Build comprehensive tooltip with all available info
+        let tooltipText = voice.name;
+        if (voice.description && voice.description !== voice.name) {
+            tooltipText += ': ' + voice.description;
+        }
+
         const option = $('<option></option>')
             .attr('value', voice.voice_id)
-            .text(optionText);
+            .text(displayText)
+            .attr('title', tooltipText);
 
         dispatcherSelect.append(option.clone());
         callerSelect.append(option.clone());
@@ -456,6 +503,9 @@ function saveToHistory(formData) {
             emotion_level: formData.emotion_level,
             erratic_level: formData.erratic_level,
             audio_format: formData.audio_format,
+            audio_quality: formData.audio_quality,
+            background_noise_type: formData.background_noise_type,
+            background_noise_level: formData.background_noise_level,
             diarized: formData.diarized === 'true'
         };
 
@@ -500,13 +550,13 @@ function loadHistory() {
             const callTypeBadge = entry.call_type === 'transfer' ? 'bg-primary' : 'bg-secondary';
 
             const historyItem = $(`
-                <div class="card mb-2 history-item" data-id="${entry.id}" style="cursor: pointer;">
+                <div class="card mb-2 history-item" data-id="${entry.id}">
                     <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <div class="text-muted small">${timeStr}</div>
-                                <div class="mt-1">${escapeHtml(entry.prompt)}</div>
-                                <div class="mt-2">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="text-muted small mb-1">${timeStr}</div>
+                                <div class="mb-2">${escapeHtml(entry.prompt)}</div>
+                                <div>
                                     <span class="badge ${callTypeBadge}">${callTypeLabel}</span>
                                     <span class="badge bg-secondary">${entry.call_duration}s</span>
                                     ${entry.call_type !== 'transfer' ? `<span class="badge bg-info">${emotionLabel}</span>` : ''}
@@ -514,9 +564,11 @@ function loadHistory() {
                                     ${entry.diarized ? '<span class="badge bg-success">Diarized</span>' : ''}
                                 </div>
                             </div>
-                            <button class="btn btn-sm btn-outline-primary load-history-btn ms-2" data-id="${entry.id}">
-                                <i class="bi bi-arrow-clockwise"></i> Load
-                            </button>
+                            <div class="col-auto">
+                                <button class="btn btn-sm btn-outline-primary load-history-btn" data-id="${entry.id}">
+                                    <i class="bi bi-arrow-clockwise"></i> Load
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -559,6 +611,19 @@ function loadHistoryItem(id) {
             $('#emotionLevel').val(entry.emotion_level);
             $('#erraticLevel').val(entry.erratic_level || 'none');
             $('#audioFormat').val(entry.audio_format);
+            $('#audioQuality').val(entry.audio_quality || 'high');
+
+            // Handle both old and new background noise formats
+            $('#backgroundNoiseType').val(entry.background_noise_type || entry.background_noise || 'none');
+            $('#backgroundNoiseLevel').val(entry.background_noise_level || 'moderate');
+
+            // Show/hide noise level section based on type
+            if ($('#backgroundNoiseType').val() !== 'none') {
+                $('#noiseLevelSection').show();
+            } else {
+                $('#noiseLevelSection').hide();
+            }
+
             $('#diarized').prop('checked', entry.diarized);
 
             // Update character count

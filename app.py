@@ -69,12 +69,15 @@ def generate():
         emotion_level = request.form.get('emotion_level', 'concerned').strip()
         erratic_level = request.form.get('erratic_level', 'none').strip()
         audio_format = request.form.get('audio_format', 'mp3').lower()
+        audio_quality = request.form.get('audio_quality', 'high').strip()
+        background_noise_type = request.form.get('background_noise_type', 'none').strip()
+        background_noise_level = request.form.get('background_noise_level', 'moderate').strip()
         diarized = request.form.get('diarized', 'false').lower() == 'true'
         dispatcher_voice_id = request.form.get('dispatcher_voice_id', '').strip()
         caller_voice_id = request.form.get('caller_voice_id', '').strip()
         nurse_voice_id = request.form.get('nurse_voice_id', '').strip()
 
-        logger.info(f"Generate request: type={call_type}, format={audio_format}, diarized={diarized}, duration={call_duration}s, emotion={emotion_level}, erratic={erratic_level}")
+        logger.info(f"Generate request: type={call_type}, format={audio_format}, quality={audio_quality}, noise={background_noise_type}/{background_noise_level}, diarized={diarized}, duration={call_duration}s, emotion={emotion_level}, erratic={erratic_level}")
         logger.info(f"Voices: dispatcher={dispatcher_voice_id[:20]}..., caller={caller_voice_id[:20]}..." +
                    (f", nurse={nurse_voice_id[:20]}..." if nurse_voice_id else ""))
         logger.info(f"Prompt: {prompt[:100]}...")
@@ -178,13 +181,19 @@ def generate():
             logger.info("Creating diarized audio (stereo channels)")
             final_audio = audio_processor.create_diarized_audio(
                 dialogue,
-                audio_segments
+                audio_segments,
+                audio_quality,
+                background_noise_type,
+                background_noise_level
             )
         else:
             logger.info("Creating combined audio (mono)")
             final_audio = audio_processor.combine_dialogue_audio(
                 dialogue,
-                audio_segments
+                audio_segments,
+                audio_quality,
+                background_noise_type,
+                background_noise_level
             )
 
         # 5. Save file
