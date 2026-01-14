@@ -43,6 +43,15 @@ $(document).ready(function() {
     // Initialize UI based on default call type
     updateUIForCallType($('#callType').val());
 
+    // Handle history collapse toggle - rotate chevron
+    $('#historyCollapse').on('show.bs.collapse', function() {
+        $('#historyChevron').removeClass('bi-chevron-down').addClass('bi-chevron-up');
+    });
+
+    $('#historyCollapse').on('hide.bs.collapse', function() {
+        $('#historyChevron').removeClass('bi-chevron-up').addClass('bi-chevron-down');
+    });
+
     // Background noise type change handler
     $('#backgroundNoiseType').on('change', function() {
         const noiseType = $(this).val();
@@ -459,16 +468,31 @@ function populateVoiceDropdowns(voices) {
             v.name.toLowerCase().includes('elli')
         ) || voices[Math.min(1, voices.length - 1)];
 
-        // Try to find calm/professional voices for nurse
-        const nurseVoice = voices.find(v =>
-            v.name.toLowerCase().includes('sarah') ||
-            v.name.toLowerCase().includes('grace') ||
-            v.name.toLowerCase().includes('domi')
-        ) || voices[Math.min(2, voices.length - 1)];
+        // Try to find calm/professional voices for nurse/translator
+        // Check for Sophie first as priority
+        let nurseVoice = voices.find(v => v.name.toLowerCase().includes('sophie'));
+
+        // Fall back to other voices if Sophie not found
+        if (!nurseVoice) {
+            nurseVoice = voices.find(v =>
+                v.name.toLowerCase().includes('sarah') ||
+                v.name.toLowerCase().includes('grace') ||
+                v.name.toLowerCase().includes('domi')
+            ) || voices[Math.min(2, voices.length - 1)];
+        }
+
+        console.log('Selected nurse/translator voice:', nurseVoice.name, nurseVoice.voice_id);
 
         dispatcherSelect.val(dispatcherVoice.voice_id);
         callerSelect.val(callerVoice.voice_id);
         nurseSelect.val(nurseVoice.voice_id);
+
+        // Store the default voice IDs for later use
+        window.defaultVoices = {
+            dispatcher: dispatcherVoice.voice_id,
+            caller: callerVoice.voice_id,
+            nurse: nurseVoice.voice_id
+        };
 
         // Enable preview buttons
         $('#previewDispatcher').prop('disabled', false);
@@ -617,6 +641,32 @@ function saveToHistory(formData) {
 }
 
 /**
+ * Format timestamp as relative time
+ */
+function formatRelativeTime(timestamp) {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now - date;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSecs < 60) {
+        return 'Just now';
+    } else if (diffMins < 60) {
+        return diffMins === 1 ? '1 minute ago' : `${diffMins} minutes ago`;
+    } else if (diffHours < 24) {
+        return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+    } else if (diffDays < 7) {
+        return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+    } else {
+        // For older entries, show the actual date
+        return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+}
+
+/**
  * Load and display history
  */
 function loadHistory() {
@@ -635,17 +685,34 @@ function loadHistory() {
 
         history.forEach(function(entry) {
             const date = new Date(entry.timestamp);
-            const timeStr = date.toLocaleString();
+            const relativeTime = formatRelativeTime(entry.timestamp);
+            const fullTimeStr = date.toLocaleDateString() + ' at ' + date.toLocaleTimeString();
             const emotionLabel = entry.emotion_level.charAt(0).toUpperCase() + entry.emotion_level.slice(1);
-            const callTypeLabel = entry.call_type === 'transfer' ? 'Transfer' : 'Emergency';
-            const callTypeBadge = entry.call_type === 'transfer' ? 'bg-primary' : 'bg-secondary';
+
+            // Better call type labels
+            let callTypeLabel, callTypeBadge;
+            if (entry.call_type === 'transfer') {
+                callTypeLabel = 'Transfer';
+                callTypeBadge = 'bg-primary';
+            } else if (entry.call_type === 'warm_transfer') {
+                callTypeLabel = 'Warm Transfer';
+                callTypeBadge = 'bg-info';
+            } else if (entry.call_type === 'with_translator') {
+                callTypeLabel = 'Translator';
+                callTypeBadge = 'bg-success';
+            } else {
+                callTypeLabel = 'Emergency';
+                callTypeBadge = 'bg-secondary';
+            }
 
             const historyItem = $(`
                 <div class="card mb-2 history-item" data-id="${entry.id}">
                     <div class="card-body p-3">
                         <div class="row align-items-center">
                             <div class="col">
-                                <div class="text-muted small mb-1">${timeStr}</div>
+                                <div class="text-muted small mb-1" title="${fullTimeStr}">
+                                    <i class="bi bi-clock"></i> ${relativeTime}
+                                </div>
                                 <div class="mb-2">${escapeHtml(entry.prompt)}</div>
                                 <div>
                                     <span class="badge ${callTypeBadge}">${callTypeLabel}</span>
@@ -778,6 +845,11 @@ function updateUIForCallType(callType) {
         $('#voice3Label').text('Translator Voice');
         $('#voice3Help').text('Bilingual translator facilitating communication');
 
+        // Re-apply default nurse voice if not already selected
+        if (window.defaultVoices && $('#nurseVoice').val() === '') {
+            $('#nurseVoice').val(window.defaultVoices.nurse);
+        }
+
         // Show emotion level and erratic level
         $('#emotionLevelSection').show();
         $('#erraticLevelSection').show();
@@ -835,6 +907,11 @@ function updateUIForCallType(callType) {
         $('#nurseVoice').prop('required', true);
         $('#voice3Label').text('Nurse Voice');
         $('#voice3Help').text('Triage nurse providing medical assessment');
+
+        // Re-apply default nurse voice if not already selected
+        if (window.defaultVoices && $('#nurseVoice').val() === '') {
+            $('#nurseVoice').val(window.defaultVoices.nurse);
+        }
 
         // Show emotion level and erratic level for caller
         $('#emotionLevelSection').show();

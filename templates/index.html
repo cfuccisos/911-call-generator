@@ -158,6 +158,23 @@
                         </div>
                     </div>
 
+                    <!-- Diarization Option (Compact) -->
+                    <div class="mb-3">
+                        <div class="form-check form-check-inline">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="diarized"
+                                name="diarized"
+                            >
+                            <label class="form-check-label small" for="diarized">
+                                <strong>Diarized Audio</strong>
+                                <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="right"
+                                   title="Separate speakers on different stereo channels (dispatcher on left, caller on right)"></i>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Pre-loaded Script Selector (Hidden by default) -->
                     <div class="mb-4" id="preloadedScriptSection" style="display: none;">
                         <label for="scriptSelector" class="form-label fw-bold">
@@ -420,26 +437,6 @@
                         </div>
                     </div>
 
-                    <!-- Diarization Option -->
-                    <div class="mb-4">
-                        <div class="form-check">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="diarized"
-                                name="diarized"
-                            >
-                            <label class="form-check-label" for="diarized">
-                                <strong>Diarized Audio</strong>
-                                <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" data-bs-placement="right"
-                                   title="Separate speakers on different stereo channels (dispatcher on left, caller on right)"></i>
-                            </label>
-                            <div class="form-text">
-                                Separate audio channels for each speaker (useful for analysis)
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Generate Button -->
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
@@ -524,33 +521,49 @@
 
         <!-- History Section -->
         <div id="historySection" class="card mt-4 d-none">
-            <div class="card-body">
-                <h6 class="card-title">
+            <div class="card-header d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#historyCollapse" aria-expanded="false">
+                <h6 class="mb-0">
                     <i class="bi bi-clock-history"></i>
                     Recent Prompts
-                    <button type="button" class="btn btn-sm btn-outline-danger float-end" id="clearHistory">
-                        <i class="bi bi-trash"></i> Clear
-                    </button>
+                    <i class="bi bi-chevron-down ms-2" id="historyChevron"></i>
                 </h6>
-                <div id="historyList" class="mt-3">
-                    <!-- History items will be inserted here -->
+                <button type="button" class="btn btn-sm btn-outline-danger" id="clearHistory" onclick="event.stopPropagation()">
+                    <i class="bi bi-trash"></i> Clear
+                </button>
+            </div>
+            <div class="collapse" id="historyCollapse">
+                <div class="card-body">
+                    <div id="historyList">
+                        <!-- History items will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Info Section -->
-        <div class="card mt-4 border-info">
-            <div class="card-body">
-                <h6 class="card-title">
+    </div>
+</div>
+
+<!-- How It Works Modal -->
+<div class="modal fade" id="howItWorksModal" tabindex="-1" aria-labelledby="howItWorksModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="howItWorksModalLabel">
                     <i class="bi bi-info-circle text-info"></i>
                     How it works
-                </h6>
-                <ul class="mb-0 small">
-                    <li>Enter a description of an emergency scenario</li>
-                    <li>AI generates realistic dialogue between a 911 dispatcher and caller</li>
-                    <li>Text-to-speech creates natural-sounding audio</li>
-                    <li>Download the audio for testing or training purposes</li>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="mb-0">
+                    <li class="mb-2">Enter a description of an emergency scenario</li>
+                    <li class="mb-2">AI generates realistic dialogue between a 911 dispatcher and caller</li>
+                    <li class="mb-2">Text-to-speech creates natural-sounding audio</li>
+                    <li class="mb-0">Download the audio for testing or training purposes</li>
                 </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
