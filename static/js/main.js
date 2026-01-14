@@ -453,6 +453,7 @@ function populateVoiceDropdowns(voices) {
 
         // Try to find emotional/varied voices for caller
         const callerVoice = voices.find(v =>
+            v.name.toLowerCase().includes('river') ||
             v.name.toLowerCase().includes('bella') ||
             v.name.toLowerCase().includes('adam') ||
             v.name.toLowerCase().includes('elli')
