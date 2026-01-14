@@ -69,8 +69,8 @@ $(document).ready(function() {
             // Show pre-loaded script selector
             $('#preloadedScriptSection').show();
 
-            // Hide all scenario configuration sections
-            $('#scenarioConfigSection').hide(); // Call type & duration
+            // Hide all scenario configuration sections (including headers)
+            $('#callConfigurationSection').hide(); // Call Configuration section with title
             $('#customPromptSection').hide(); // Custom prompt textarea
             $('#protocolQuestionsToggle').hide(); // Protocol questions
             $('#emotionLevelSection').hide(); // Emotion level
@@ -85,7 +85,7 @@ $(document).ready(function() {
             $('#preloadedScriptSection').hide();
 
             // Show scenario configuration sections
-            $('#scenarioConfigSection').show(); // Call type & duration
+            $('#callConfigurationSection').show(); // Call Configuration section with title
             $('#customPromptSection').show(); // Custom prompt textarea
             $('#protocolQuestionsToggle').show(); // Protocol questions
 

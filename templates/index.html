@@ -19,8 +19,59 @@
             <div class="card-body p-4">
                 <!-- Form -->
                 <form id="generateForm">
-                    <!-- Call Type & Duration -->
-                    <div class="row mb-3" id="scenarioConfigSection">
+                    <!-- Section: Script Source & Options -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-file-text"></i> Script Source
+                        </h6>
+
+                        <!-- Script Source Toggle -->
+                        <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            Source
+                        </label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="scriptSource" id="scriptSourceCustom" value="custom" checked>
+                            <label class="btn btn-outline-primary" for="scriptSourceCustom">
+                                <i class="bi bi-magic"></i>
+                                Generate with AI
+                            </label>
+
+                            <input type="radio" class="btn-check" name="scriptSource" id="scriptSourcePreloaded" value="preloaded">
+                            <label class="btn btn-outline-primary" for="scriptSourcePreloaded">
+                                <i class="bi bi-file-earmark-text"></i>
+                                Use Pre-loaded Script
+                            </label>
+                        </div>
+                        </div>
+
+                        <!-- Diarization Option (Compact) -->
+                        <div class="mb-3">
+                        <div class="form-check form-check-inline">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="diarized"
+                                name="diarized"
+                            >
+                            <label class="form-check-label small" for="diarized">
+                                <strong>Diarized Audio</strong>
+                                <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="right"
+                                   title="Separate speakers on different stereo channels (dispatcher on left, caller on right)"></i>
+                            </label>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Call Configuration -->
+                    <div id="callConfigurationSection">
+                        <hr class="my-4">
+
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-gear"></i> Call Configuration
+                            </h6>
+                            <div class="row mb-3">
                         <!-- Call Type Selection -->
                         <div class="col-md-6">
                             <label for="callType" class="form-label fw-bold">
@@ -55,9 +106,19 @@
                                 Target call length
                             </div>
                         </div>
+                        </div>
+                        </div>
                     </div>
 
-                    <!-- Language Selection Row (Single Language) -->
+                    <hr class="my-4">
+
+                    <!-- Section: Language Settings -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-translate"></i> Language Settings
+                        </h6>
+
+                        <!-- Language Selection Row (Single Language) -->
                     <div class="row mb-3" id="singleLanguageSection">
                         <div class="col-md-12">
                             <label for="language" class="form-label fw-bold">
@@ -136,47 +197,18 @@
                             </select>
                         </div>
                     </div>
+                    </div>
 
-                    <!-- Script Source Toggle -->
+                    <hr class="my-4">
+
+                    <!-- Section: Scenario Details -->
                     <div class="mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-file-text"></i>
-                            Script Source
-                        </label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="scriptSource" id="scriptSourceCustom" value="custom" checked>
-                            <label class="btn btn-outline-primary" for="scriptSourceCustom">
-                                <i class="bi bi-magic"></i>
-                                Generate with AI
-                            </label>
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-pencil-square"></i> Scenario Details
+                        </h6>
 
-                            <input type="radio" class="btn-check" name="scriptSource" id="scriptSourcePreloaded" value="preloaded">
-                            <label class="btn btn-outline-primary" for="scriptSourcePreloaded">
-                                <i class="bi bi-file-earmark-text"></i>
-                                Use Pre-loaded Script
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Diarization Option (Compact) -->
-                    <div class="mb-3">
-                        <div class="form-check form-check-inline">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="diarized"
-                                name="diarized"
-                            >
-                            <label class="form-check-label small" for="diarized">
-                                <strong>Diarized Audio</strong>
-                                <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" data-bs-placement="right"
-                                   title="Separate speakers on different stereo channels (dispatcher on left, caller on right)"></i>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Pre-loaded Script Selector (Hidden by default) -->
-                    <div class="mb-4" id="preloadedScriptSection" style="display: none;">
+                        <!-- Pre-loaded Script Selector (Hidden by default) -->
+                        <div class="mb-4" id="preloadedScriptSection" style="display: none;">
                         <label for="scriptSelector" class="form-label fw-bold">
                             <i class="bi bi-collection"></i>
                             Select Script
@@ -262,8 +294,17 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
-                    <!-- Voice Selection (Side by Side) -->
+                    <hr class="my-4">
+
+                    <!-- Section: Voice Selection -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-mic"></i> Voice Selection
+                        </h6>
+
+                        <!-- Voice Selection (Side by Side) -->
                     <div class="row mb-3">
                         <!-- First Speaker Voice Selection -->
                         <div class="col-md-6">
@@ -322,8 +363,17 @@
                             Calm, professional voice for the nurse
                         </div>
                     </div>
+                    </div>
 
-                    <!-- Caller Emotion & Erratic Behavior (Side by Side) -->
+                    <hr class="my-4">
+
+                    <!-- Section: Caller Behavior -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-person"></i> Caller Behavior
+                        </h6>
+
+                        <!-- Caller Emotion & Erratic Behavior (Side by Side) -->
                     <div class="row mb-3">
                         <!-- Caller Emotion Level (Emergency Calls Only) -->
                         <div class="col-md-6" id="emotionLevelSection">
@@ -361,8 +411,17 @@
                             </div>
                         </div>
                     </div>
+                    </div>
 
-                    <!-- Audio Format & Quality (Side by Side) -->
+                    <hr class="my-4">
+
+                    <!-- Section: Audio Settings -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-soundwave"></i> Audio Settings
+                        </h6>
+
+                        <!-- Audio Format & Quality (Side by Side) -->
                     <div class="row mb-3">
                         <!-- Audio Format Selection -->
                         <div class="col-md-6">
@@ -436,6 +495,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
+
+                    <hr class="my-4">
 
                     <!-- Generate Button -->
                     <div class="d-grid">
