@@ -84,6 +84,8 @@ def generate():
         use_preloaded = request.form.get('use_preloaded', 'false').lower() == 'true'
         call_type = request.form.get('call_type', 'emergency').strip()
         language = request.form.get('language', 'en').strip()
+        dispatcher_language = request.form.get('dispatcher_language', 'en').strip()
+        caller_language = request.form.get('caller_language', 'en').strip()
         dispatcher_protocol_questions = request.form.get('dispatcher_protocol_questions', '').strip()
         nurse_protocol_questions = request.form.get('nurse_protocol_questions', '').strip()
         call_duration_str = request.form.get('call_duration', '60').strip()
@@ -175,7 +177,9 @@ def generate():
                 nurse_protocol_questions,
                 nurse_info['gender'] if nurse_info else 'unknown',
                 erratic_level,
-                language
+                language,
+                dispatcher_language,
+                caller_language
             )
             dialogue = dialogue_data['dialogue']
             metadata = dialogue_data.get('metadata', {})
@@ -187,25 +191,37 @@ def generate():
         audio_segments = []
 
         for i, item in enumerate(dialogue):
-            # Get appropriate voice ID from form data
+            # Get appropriate voice ID and language for speaker
+            # For translator scenarios, use dispatcher_language/caller_language
+            # For nurse in translator scenarios, it's the translator (bilingual)
             if item['speaker'] == 'dispatcher':
+                speaker_language = dispatcher_language if call_type == 'with_translator' else language
                 audio_bytes = elevenlabs.generate_dispatcher_audio(
                     item['text'],
                     dispatcher_voice_id,
-                    language
+                    speaker_language
                 )
             elif item['speaker'] == 'nurse':
+                # Nurse in warm transfer scenarios
                 audio_bytes = elevenlabs.generate_nurse_audio(
                     item['text'],
                     nurse_voice_id,
                     language
                 )
+            elif item['speaker'] == 'translator':
+                # Translator is bilingual - use multilingual model
+                audio_bytes = elevenlabs.generate_nurse_audio(
+                    item['text'],
+                    nurse_voice_id,
+                    'mixed'
+                )
             else:  # caller
+                speaker_language = caller_language if call_type == 'with_translator' else language
                 audio_bytes = elevenlabs.generate_caller_audio(
                     item['text'],
                     caller_voice_id,
                     emotion_level,
-                    language
+                    speaker_language
                 )
 
             audio_segments.append(audio_bytes)

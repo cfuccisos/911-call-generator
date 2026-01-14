@@ -19,10 +19,10 @@
             <div class="card-body p-4">
                 <!-- Form -->
                 <form id="generateForm">
-                    <!-- Call Type, Duration & Language -->
-                    <div class="row mb-3">
+                    <!-- Call Type & Duration -->
+                    <div class="row mb-3" id="scenarioConfigSection">
                         <!-- Call Type Selection -->
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label for="callType" class="form-label fw-bold">
                                 <i class="bi bi-telephone"></i>
                                 Call Type
@@ -31,6 +31,7 @@
                                 <option value="emergency" selected>Emergency Call</option>
                                 <option value="transfer">Dispatcher Transfer</option>
                                 <option value="warm_transfer">Warm Transfer to Nurse</option>
+                                <option value="with_translator">Emergency Call with Translator</option>
                             </select>
                             <div class="form-text">
                                 Type of 911 call
@@ -38,7 +39,7 @@
                         </div>
 
                         <!-- Call Duration Selection -->
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label for="callDuration" class="form-label fw-bold">
                                 <i class="bi bi-clock"></i>
                                 Target Call Duration
@@ -54,9 +55,11 @@
                                 Target call length
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Language Selection -->
-                        <div class="col-md-4">
+                    <!-- Language Selection Row (Single Language) -->
+                    <div class="row mb-3" id="singleLanguageSection">
+                        <div class="col-md-12">
                             <label for="language" class="form-label fw-bold">
                                 <i class="bi bi-translate"></i>
                                 Language
@@ -78,6 +81,59 @@
                             <div class="form-text">
                                 Dialogue language
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Language Selection Row (Multi-Language for Translator) -->
+                    <div class="row mb-3" id="multiLanguageSection" style="display: none;">
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-translate"></i>
+                                Languages
+                            </label>
+                            <div class="form-text text-primary">
+                                <i class="bi bi-info-circle"></i> Select the language for each participant
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dispatcherLanguage" class="form-label fw-bold">
+                                <i class="bi bi-person-badge"></i>
+                                Dispatcher Language
+                            </label>
+                            <select class="form-select" id="dispatcherLanguage" name="dispatcher_language">
+                                <option value="en" selected>English</option>
+                                <option value="es">Spanish (Español)</option>
+                                <option value="fr">French (Français)</option>
+                                <option value="de">German (Deutsch)</option>
+                                <option value="it">Italian (Italiano)</option>
+                                <option value="pt">Portuguese (Português)</option>
+                                <option value="pl">Polish (Polski)</option>
+                                <option value="hi">Hindi (हिन्दी)</option>
+                                <option value="ja">Japanese (日本語)</option>
+                                <option value="ko">Korean (한국어)</option>
+                                <option value="zh">Chinese (中文)</option>
+                                <option value="ar">Arabic (العربية)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="callerLanguage" class="form-label fw-bold">
+                                <i class="bi bi-person"></i>
+                                Caller Language
+                            </label>
+                            <select class="form-select" id="callerLanguage" name="caller_language">
+                                <option value="en">English</option>
+                                <option value="es" selected>Spanish (Español)</option>
+                                <option value="fr">French (Français)</option>
+                                <option value="de">German (Deutsch)</option>
+                                <option value="it">Italian (Italiano)</option>
+                                <option value="pt">Portuguese (Português)</option>
+                                <option value="pl">Polish (Polski)</option>
+                                <option value="hi">Hindi (हिन्दी)</option>
+                                <option value="ja">Japanese (日本語)</option>
+                                <option value="ko">Korean (한국어)</option>
+                                <option value="zh">Chinese (中文)</option>
+                                <option value="ar">Arabic (العربية)</option>
+                            </select>
                         </div>
                     </div>
 
@@ -136,7 +192,7 @@
                     </div>
 
                     <!-- Protocol Questions Toggle (Optional) -->
-                    <div class="mb-4">
+                    <div class="mb-4" id="protocolQuestionsToggle">
                         <button
                             class="btn btn-outline-secondary btn-sm"
                             type="button"

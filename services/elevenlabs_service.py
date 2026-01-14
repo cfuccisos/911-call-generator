@@ -83,8 +83,8 @@ class ElevenLabsService:
             processed_text = self._preprocess_text(text)
 
             # Select model based on language
-            # Use multilingual model for non-English languages
-            model_id = "eleven_multilingual_v2" if language != 'en' else "eleven_monolingual_v1"
+            # Use multilingual model for non-English languages or mixed (translator) scenarios
+            model_id = "eleven_multilingual_v2" if (language != 'en' or language == 'mixed') else "eleven_monolingual_v1"
 
             # For version 0.2.27, use simpler API call
             audio = generate(

@@ -57,13 +57,34 @@ $(document).ready(function() {
     $('input[name="scriptSource"]').on('change', function() {
         const source = $(this).val();
         if (source === 'preloaded') {
+            // Show pre-loaded script selector
             $('#preloadedScriptSection').show();
-            $('#customPromptSection').hide();
+
+            // Hide all scenario configuration sections
+            $('#scenarioConfigSection').hide(); // Call type & duration
+            $('#customPromptSection').hide(); // Custom prompt textarea
+            $('#protocolQuestionsToggle').hide(); // Protocol questions
+            $('#emotionLevelSection').hide(); // Emotion level
+            $('#erraticLevelSection').hide(); // Erratic behavior
+
+            // Mark prompt as not required
             $('#prompt').prop('required', false);
+
+            // Keep language, voice, and audio settings visible
         } else {
+            // Hide pre-loaded script selector
             $('#preloadedScriptSection').hide();
-            $('#customPromptSection').show();
+
+            // Show scenario configuration sections
+            $('#scenarioConfigSection').show(); // Call type & duration
+            $('#customPromptSection').show(); // Custom prompt textarea
+            $('#protocolQuestionsToggle').show(); // Protocol questions
+
+            // Mark prompt as required
             $('#prompt').prop('required', true);
+
+            // Update UI based on current call type (emotion/erratic visibility)
+            updateUIForCallType($('#callType').val());
         }
     });
 
@@ -143,11 +164,13 @@ $(document).ready(function() {
 
         // Get form data
         const usePreloaded = $('input[name="scriptSource"]:checked').val() === 'preloaded';
+        const callType = $('#callType').val();
+
         const formData = {
             use_preloaded: usePreloaded ? 'true' : 'false',
             script_filename: usePreloaded ? $('#scriptSelector').val() : '',
             prompt: $('#prompt').val().trim(),
-            call_type: $('#callType').val(),
+            call_type: callType,
             language: $('#language').val(),
             dispatcher_protocol_questions: $('#dispatcherProtocolQuestions').val().trim(),
             nurse_protocol_questions: $('#nurseProtocolQuestions').val().trim(),
@@ -163,6 +186,12 @@ $(document).ready(function() {
             caller_voice_id: $('#callerVoice').val(),
             nurse_voice_id: $('#nurseVoice').val() || ''
         };
+
+        // Add translator-specific language parameters
+        if (callType === 'with_translator') {
+            formData.dispatcher_language = $('#dispatcherLanguage').val();
+            formData.caller_language = $('#callerLanguage').val();
+        }
 
         // Update loading message after a delay
         setTimeout(function() {
@@ -726,7 +755,37 @@ function escapeHtml(text) {
  * Update UI labels and visibility based on call type
  */
 function updateUIForCallType(callType) {
-    if (callType === 'transfer') {
+    if (callType === 'with_translator') {
+        // Emergency call with translator (3-way: dispatcher -> translator -> caller)
+        $('#promptLabel').text('Emergency Scenario Description');
+        $('#prompt').attr('placeholder', 'Describe the emergency scenario... (e.g., "Car accident with Spanish-speaking caller needing assistance")');
+
+        $('#voice1Label').text('Dispatcher Voice');
+        $('#voice1Help').text('911 dispatcher (speaks dispatcher language)');
+
+        $('#voice2Label').text('Caller Voice');
+        $('#voice2Help').text('Emergency caller (speaks caller language)');
+
+        // Protocol questions
+        $('#dispatcherProtocolLabel').text('Protocol Questions');
+        $('#dispatcherProtocolHelp').text('Specific questions the dispatcher must ask');
+        $('#nurseProtocolSection').hide();
+
+        // Show nurse voice section for translator
+        $('#nurseVoiceSection').show();
+        $('#nurseVoice').prop('required', true);
+        $('#voice3Label').text('Translator Voice');
+        $('#voice3Help').text('Bilingual translator facilitating communication');
+
+        // Show emotion level and erratic level
+        $('#emotionLevelSection').show();
+        $('#erraticLevelSection').show();
+
+        // Show multi-language sections
+        $('#singleLanguageSection').hide();
+        $('#multiLanguageSection').show();
+
+    } else if (callType === 'transfer') {
         // Dispatcher-to-dispatcher transfer
         $('#promptLabel').text('Transfer Scenario Description');
         $('#prompt').attr('placeholder', 'Describe the incident being transferred... (e.g., "Active shooter situation at downtown mall, transferring to SWAT commander")');
@@ -750,6 +809,10 @@ function updateUIForCallType(callType) {
         $('#nurseVoiceSection').hide();
         $('#nurseVoice').prop('required', false);
 
+        // Show single language, hide multi-language
+        $('#singleLanguageSection').show();
+        $('#multiLanguageSection').hide();
+
     } else if (callType === 'warm_transfer') {
         // Warm transfer to nurse (3-way: dispatcher -> nurse -> caller)
         $('#promptLabel').text('Warm Transfer Scenario Description');
@@ -769,10 +832,16 @@ function updateUIForCallType(callType) {
         // Show nurse voice section
         $('#nurseVoiceSection').show();
         $('#nurseVoice').prop('required', true);
+        $('#voice3Label').text('Nurse Voice');
+        $('#voice3Help').text('Triage nurse providing medical assessment');
 
         // Show emotion level and erratic level for caller
         $('#emotionLevelSection').show();
         $('#erraticLevelSection').show();
+
+        // Show single language, hide multi-language
+        $('#singleLanguageSection').show();
+        $('#multiLanguageSection').hide();
 
     } else {
         // Emergency call (dispatcher to caller)
@@ -797,5 +866,9 @@ function updateUIForCallType(callType) {
         // Hide nurse voice section
         $('#nurseVoiceSection').hide();
         $('#nurseVoice').prop('required', false);
+
+        // Show single language, hide multi-language
+        $('#singleLanguageSection').show();
+        $('#multiLanguageSection').hide();
     }
 }

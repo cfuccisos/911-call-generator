@@ -31,7 +31,9 @@ class GeminiService:
         nurse_protocol_questions: str = '',
         nurse_gender: str = 'unknown',
         erratic_level: str = 'none',
-        language: str = 'en'
+        language: str = 'en',
+        dispatcher_language: str = 'en',
+        caller_language: str = 'en'
     ) -> dict:
         """
         Generate 911 call dialogue based on scenario.
@@ -65,7 +67,7 @@ class GeminiService:
         Raises:
             ValueError: If dialogue generation or parsing fails
         """
-        prompt = self._build_prompt(scenario, target_duration, emotion_level, dispatcher_gender, caller_gender, dispatcher_protocol_questions, call_type, nurse_protocol_questions, nurse_gender, erratic_level, language)
+        prompt = self._build_prompt(scenario, target_duration, emotion_level, dispatcher_gender, caller_gender, dispatcher_protocol_questions, call_type, nurse_protocol_questions, nurse_gender, erratic_level, language, dispatcher_language, caller_language)
 
         try:
             protocol_msg = ""
@@ -95,7 +97,9 @@ class GeminiService:
         nurse_protocol_questions: str = '',
         nurse_gender: str = 'unknown',
         erratic_level: str = 'none',
-        language: str = 'en'
+        language: str = 'en',
+        dispatcher_language: str = 'en',
+        caller_language: str = 'en'
     ) -> str:
         """
         Build prompt for Gemini to generate realistic 911 dialogue.
@@ -203,7 +207,81 @@ The nurse MUST ask these specific questions during the assessment (integrate the
 """
 
         # Build different prompts based on call type
-        if call_type == 'warm_transfer':
+        if call_type == 'with_translator':
+            # Translator scenario (3-speaker: dispatcher, caller, translator)
+            # Map language codes to full names for the prompt
+            dispatcher_language_name = language_names.get(dispatcher_language, 'English')
+            caller_language_name = language_names.get(caller_language, 'Spanish')
+
+            return f"""You are an expert in creating realistic 911 call scenarios with language barriers for training purposes.
+
+Generate a dialogue where a 911 dispatcher communicates with a non-English speaking caller through a bilingual translator. The conversation has THREE speakers:
+1. Dispatcher (speaks {dispatcher_language_name} only)
+2. Translator (bilingual, facilitates communication between dispatcher and caller)
+3. Caller (speaks {caller_language_name} only)
+
+Scenario: {scenario}{dispatcher_protocol_section}{erratic_note}
+
+CRITICAL - Language Requirements:
+- The DISPATCHER must speak ONLY in {dispatcher_language_name}. Every line by the dispatcher MUST be in {dispatcher_language_name}.
+- The CALLER must speak ONLY in {caller_language_name}. Every line by the caller MUST be in {caller_language_name}.
+- The TRANSLATOR is bilingual and alternates between both languages:
+  * When translating the dispatcher's questions to the caller, speak in {caller_language_name}
+  * When translating the caller's responses to the dispatcher, speak in {dispatcher_language_name}
+  * The translator should say brief phrases like "They're saying..." or "I'll translate..." in the appropriate language
+
+Requirements:
+1. Start with dispatcher greeting in {dispatcher_language_name}
+2. Caller responds in {caller_language_name} - language barrier is evident
+3. Dispatcher recognizes the language barrier and explicitly brings in the translator as a resource (e.g., "Hold on, I'm connecting our {caller_language_name} translator" or "Let me get our language line on the call")
+4. Translator joins and introduces themselves briefly in both languages
+5. Dispatcher asks questions in {dispatcher_language_name} -> Translator translates to {caller_language_name} -> Caller responds in {caller_language_name} -> Translator translates back to {dispatcher_language_name}
+6. Include {exchange_range} exchanges total (target duration: ~{{target_duration}} seconds)
+7. Dispatcher voice: professional, calm, familiar with using translator services{dispatcher_desc}
+8. Translator voice: clear, helpful, professional, switches languages fluidly{nurse_desc}
+9. Caller emotion level: {emotion_desc}{caller_desc}
+10. Dispatcher gathers key information through translator: location, emergency type, injuries/hazards
+11. Use appropriate pronouns and references based on the gender of each speaker
+12. If protocol questions are provided above, ensure the dispatcher asks them (translated through interpreter)
+13. Format as JSON with this EXACT structure:
+
+{{{{
+  "dialogue": [
+    {{{{"speaker": "dispatcher", "text": "Nine one one, what's your emergency?", "pause_after": 0.5}}}},
+    {{{{"speaker": "caller", "text": "[Urgent response in {caller_language_name}]", "pause_after": 0.8}}}},
+    {{{{"speaker": "dispatcher", "text": "[In {dispatcher_language_name}] Okay, I hear you need help. Let me connect our {caller_language_name} translator. One moment.", "pause_after": 0.6}}}},
+    {{{{"speaker": "translator", "text": "[In {dispatcher_language_name}] Translator here, I can help. [Then in {caller_language_name} to caller] Hello, this is the translator.", "pause_after": 0.6}}}},
+    {{{{"speaker": "dispatcher", "text": "[In {dispatcher_language_name}] Thank you. Please ask them what their emergency is and where they are.", "pause_after": 0.5}}}},
+    {{{{"speaker": "translator", "text": "[In {caller_language_name} to caller] What is your emergency? Where are you located?", "pause_after": 0.7}}}},
+    {{{{"speaker": "caller", "text": "[Describes emergency and location in {caller_language_name}]", "pause_after": 0.9}}}},
+    {{{{"speaker": "translator", "text": "[In {dispatcher_language_name} to dispatcher] They're saying there's [emergency description]. They're located at [location].", "pause_after": 0.6}}}},
+    {{{{"speaker": "dispatcher", "text": "[In {dispatcher_language_name}] Got it. Ask if anyone is injured.", "pause_after": 0.5}}}}
+  ],
+  "metadata": {{{{
+    "scenario_type": "medical/fire/police/traffic",
+    "urgency_level": "low/medium/high/critical"
+  }}}}
+}}}}
+
+Rules for pauses:
+- Dispatcher: 0.3-0.6 seconds (professional, quick responses)
+- Translator: 0.4-0.7 seconds (clear, measured)
+- Caller: 0.6-1.2 seconds (emotional, varied based on emotion level)
+- After questions: 0.7-1.0 seconds to allow thinking time
+
+Important:
+- Make the dialogue realistic and natural with authentic language barrier challenges
+- The dispatcher should actively bring the translator into the call as a known resource/service
+- Show the dispatcher's familiarity with using translator services (e.g., "Let me connect our translator", "I'm bringing in our language line")
+- The translator acts as a professional language service, not just someone who happens to be available
+- Translator should introduce themselves professionally in both languages when joining
+- The dispatcher directs the translator on what questions to ask
+- Dispatcher should gather critical 911 information through the translator: location, emergency type, injuries, immediate hazards
+- Caller should sound appropriately stressed based on emotion level
+- Each speaker MUST use their assigned language (no mixing except for the translator)
+- Return ONLY valid JSON, no additional text or explanation"""
+
+        elif call_type == 'warm_transfer':
             # Warm transfer to nurse (3-speaker dialogue)
             return f"""You are an expert in creating realistic 911 warm transfer scenarios for medical triage training purposes.
 
@@ -413,7 +491,7 @@ Important:
                 return False
 
             # Check speaker is valid
-            if item['speaker'] not in ['dispatcher', 'caller', 'nurse']:
+            if item['speaker'] not in ['dispatcher', 'caller', 'nurse', 'translator']:
                 self.logger.error(f"Item {i} has invalid speaker: {item['speaker']}")
                 return False
 
