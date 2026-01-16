@@ -228,7 +228,7 @@ CRITICAL - Language Requirements:
 - The TRANSLATOR is bilingual and alternates between both languages:
   * When translating the dispatcher's questions to the caller, speak in {caller_language_name}
   * When translating the caller's responses to the dispatcher, speak in {dispatcher_language_name}
-  * The translator should say brief phrases like "They're saying..." or "I'll translate..." in the appropriate language
+  * The translator should provide seamless, direct translations without prefacing them with phrases like "They're saying..." or "I'll translate..."
 
 Requirements:
 1. Start with dispatcher greeting in {dispatcher_language_name}
@@ -254,7 +254,7 @@ Requirements:
     {{{{"speaker": "dispatcher", "text": "[In {dispatcher_language_name}] Thank you. Please ask them what their emergency is and where they are.", "pause_after": 0.5}}}},
     {{{{"speaker": "translator", "text": "[In {caller_language_name} to caller] What is your emergency? Where are you located?", "pause_after": 0.7}}}},
     {{{{"speaker": "caller", "text": "[Describes emergency and location in {caller_language_name}]", "pause_after": 0.9}}}},
-    {{{{"speaker": "translator", "text": "[In {dispatcher_language_name} to dispatcher] They're saying there's [emergency description]. They're located at [location].", "pause_after": 0.6}}}},
+    {{{{"speaker": "translator", "text": "[In {dispatcher_language_name} to dispatcher] There's [emergency description]. Located at [location].", "pause_after": 0.6}}}},
     {{{{"speaker": "dispatcher", "text": "[In {dispatcher_language_name}] Got it. Ask if anyone is injured.", "pause_after": 0.5}}}}
   ],
   "metadata": {{{{
