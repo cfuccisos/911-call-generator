@@ -1,0 +1,48 @@
+# Environment Configuration
+environment = "dev"  # Options: dev, staging, prod
+aws_region  = "us-east-1"
+app_name    = "911-call-generator"
+
+# Docker Image Configuration
+image_tag  = "latest"  # Update this after building and pushing new images
+image_port = 8080
+
+# Network Configuration (REQUIRED)
+# Replace with your VPC ID and private subnet IDs
+vpc_id              = "vpc-xxxxxxxxxxxxxxxxx"
+private_subnet_ids  = [
+  "subnet-xxxxxxxxxxxxxxxxx",  # Private subnet in AZ 1
+  "subnet-yyyyyyyyyyyyyyyyy"   # Private subnet in AZ 2
+]
+
+# Domain Configuration (OPTIONAL)
+# Leave empty strings to skip custom domain setup
+domain_zone      = ""  # Example: "example.com"
+domain_subdomain = ""  # Example: "911-generator" -> 911-generator.example.com
+
+# Resource Configuration
+# Adjust based on your expected load
+cpu    = 1    # vCPU units: 0.25, 0.5, 1, 2, 4
+memory = 2    # Memory in GB: 0.5, 1, 2, 3, 4, 6, 8, 10, 12
+
+# Scaling Configuration
+min_instances = 1  # Minimum number of running instances
+max_instances = 5  # Maximum number of instances for auto-scaling
+
+# Health Check Configuration
+health_check_path     = "/health"
+health_check_interval = 10  # seconds
+health_check_timeout  = 5   # seconds
+
+# AWS Secrets Manager ARNs (REQUIRED)
+# Create these secrets in AWS Secrets Manager first!
+# Example: aws secretsmanager create-secret --name gemini-api-key --secret-string "your-key-here"
+gemini_api_key_secret_arn     = "arn:aws:secretsmanager:us-east-1:123456789012:secret:gemini-api-key-xxxxxx"
+elevenlabs_api_key_secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:elevenlabs-api-key-xxxxxx"
+
+# Additional Tags (OPTIONAL)
+tags = {
+  Team        = "Engineering"
+  CostCenter  = "Development"
+  Owner       = "your-email@example.com"
+}

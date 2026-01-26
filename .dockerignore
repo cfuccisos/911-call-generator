@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Environment files
+.env
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation
+README.md
+PROJECT_NOTES.md
+
+# Terraform
+terraform/
+*.tf
+*.tfstate
+*.tfvars
+
+# Build scripts
+build-and-push.sh
+download_ambient_samples.sh
+
+# Generated audio files (will be created at runtime)
+static/audio/*.mp3
+!static/audio/ambient/*.mp3
+
+# Keep ambient samples but exclude generated call files
